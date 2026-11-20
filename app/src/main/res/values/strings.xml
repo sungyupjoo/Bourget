@@ -2,14 +2,14 @@
     <string name="app_name">Bourget</string>
 
     <string name="accessibility_service_label">Bourget 앱 실행 알림</string>
-    <string name="accessibility_service_description">Bourget은 지정한 앱이나 웹사이트가 열리면 확인 창을 띄우거나 미리 선택한 다른 앱을 열기 위해 접근성 서비스를 사용합니다. 화면이 바뀔 때 앞에 보이는 앱의 패키지 이름을 확인하고, 지원 브라우저(Chrome, 삼성 인터넷)에서는 주소창에 표시된 주소만 읽어 웹사이트 규칙과 비교합니다. 웹페이지 내용 등 주소창 외의 화면 내용은 읽지 않습니다. 확인한 앱 이름과 주소, 방문 기록은 저장하거나 외부로 전송하지 않으며, 사용자가 만든 앱과 웹사이트 규칙, 확인 창 문구만 이 기기에 저장됩니다. Bourget은 인터넷 권한이 없습니다.</string>
+    <string name="accessibility_service_description">Bourget는 지정한 앱이나 웹사이트가 열리면 확인 창을 띄우거나 미리 선택한 다른 앱을 열기 위해 접근성 서비스를 사용합니다. 화면이 바뀔 때 앞에 보이는 앱의 패키지 이름을 확인하고, 지원 브라우저(Chrome, 삼성 인터넷)에서는 주소창에 표시된 주소만 읽어 웹사이트 규칙과 비교합니다. 웹페이지 내용 등 주소창 외의 화면 내용은 읽지 않습니다. 확인한 앱 이름과 주소, 방문 기록은 저장하거나 외부로 전송하지 않으며, 사용자가 만든 앱과 웹사이트 규칙, 확인 창 문구만 이 기기에 저장됩니다. Bourget는 인터넷 권한이 없습니다.</string>
 
     <string name="confirm_continue">계속 사용하기</string>
     <string name="confirm_go_back">돌아가기</string>
 
     <string name="main_disclosure_title">접근성 권한 안내</string>
     <!-- The in-app disclosure, in parts. Keep in sync with PRIVACY.md and the service description. -->
-    <string name="disclosure_intro">Bourget은 사용자가 지정한 앱이나 웹사이트가 열리면 확인 창을 띄우거나 미리 선택한 다른 앱을 엽니다.</string>
+    <string name="disclosure_intro">Bourget는 사용자가 지정한 앱이나 웹사이트가 열리면 확인 창을 띄우거나 미리 선택한 다른 앱을 엽니다.</string>
     <string name="disclosure_reads_title">확인하는 것</string>
     <string name="disclosure_reads">이를 위해 접근성 서비스로 다음만 확인합니다.\n• 지금 앞에 보이는 앱이 무엇인지(패키지 이름)\n• 지원 브라우저(Chrome, 삼성 인터넷)의 주소창에 표시된 주소</string>
     <string name="disclosure_never_title">하지 않는 것</string>
@@ -75,7 +75,7 @@
     <string name="action_launch_desc_app">이 앱 대신 지정한 앱을 실행합니다. 원래 앱으로 돌아갈 수 있습니다.</string>
     <string name="action_launch_desc_website">이 사이트 대신 지정한 앱을 실행합니다. 브라우저 화면은 유지됩니다.</string>
     <string name="action_change">변경</string>
-    <string name="launch_has_rule">%1$s에도 규칙이 있습니다. Bourget이 실행한 경우에는 확인 창이 표시되지 않습니다.</string>
+    <string name="launch_has_rule">%1$s에도 규칙이 있습니다. Bourget가 실행한 경우에는 확인 창이 표시되지 않습니다.</string>
     <string name="rule_delete">규칙 삭제</string>
     <string name="rule_delete_title">규칙을 삭제하시겠습니까?</string>
     <string name="rule_delete_body">%1$s 규칙과 동작 설정이 삭제됩니다. 앱은 삭제되지 않습니다.</string>
@@ -125,7 +125,7 @@
     <string name="reconsent_title">안내 변경</string>
     <string name="reconsent_body">기능 추가로 안내 내용이 변경되었습니다. 다시 동의하기 전까지 서비스가 중지됩니다.</string>
     <string name="service_off_title">서비스 꺼짐</string>
-    <string name="service_off_body">접근성 설정에서 Bourget이 꺼져 있습니다. 서비스를 켜면 저장된 규칙이 적용됩니다.</string>
+    <string name="service_off_body">접근성 설정에서 Bourget가 꺼져 있습니다. 서비스를 켜면 저장된 규칙이 적용됩니다.</string>
     <string name="service_off_rules">저장된 규칙: %1$d개</string>
     <string name="review_disclosure">안내 다시 보기</string>
     <string name="declined_title">동의하지 않음</string>
@@ -149,5 +149,5 @@
     <string name="consent_decline">동의하지 않음</string>
     <string name="privacy_policy_open">개인정보 처리방침 보기</string>
     <string name="privacy_policy_title">개인정보 처리방침</string>
-    <string name="privacy_policy_body">시행일: 2026년 11월 20일\n\n1. 확인하는 정보\nBourget은 접근성 서비스로 다음 정보만 확인합니다.\n• 화면이 바뀔 때 앞에 보이는 앱의 패키지 이름: 사용자가 만든 앱 규칙과 비교하기 위해 사용합니다.\n• 지원 브라우저(Chrome, 삼성 인터넷) 주소창에 표시된 주소: 사용자가 추가한 웹사이트와 비교하기 위해 주소의 도메인만 사용합니다.\n확인한 정보는 비교에만 쓰고 바로 버리며 저장하지 않습니다. 웹페이지 내용, 입력한 글자 등 그 밖의 화면 내용은 읽지 않습니다. 이 안내에 동의하기 전에는 아무 정보도 확인하지 않습니다.\n규칙이 맞으면 확인 창을 띄우거나, 사용자가 규칙에서 선택한 다른 앱을 엽니다. 다른 앱을 열 때도 추가로 확인하거나 저장하는 정보는 없습니다.\n\n2. 저장하는 정보\n• 사용자가 만든 앱 규칙: 앱의 패키지 이름, 켜짐 여부, 동작(확인 창 또는 다른 앱 실행), 실행할 앱의 패키지 이름\n• 사용자가 추가한 웹사이트 규칙: 도메인, 켜짐 여부, 동작, 실행할 앱의 패키지 이름\n• 사용자가 정한 확인 창 문구\n• 소개 화면을 본 적 있는지와 이 안내에 동의한 버전\n이 정보는 이 기기에만 저장되며 클라우드 백업에서 제외됩니다. 앱 사용 내역과 방문 기록은 저장하지 않습니다.\n\n3. 전송과 공유\nBourget은 인터넷 권한이 없어 어떤 정보도 기기 밖으로 전송하거나 제3자와 공유하지 않습니다. 광고, 분석, 오류 보고 도구를 사용하지 않습니다. 설정의 "소스 코드"를 누르면 기기의 브라우저가 소스 코드 페이지를 엽니다.\n\n4. 보관과 삭제\n저장된 정보는 규칙을 지우거나, 앱 데이터를 삭제하거나, 앱을 삭제하면 지워집니다. 삭제된 앱의 규칙은 Bourget을 열 때 정리되고, 실행할 앱이 삭제된 규칙은 확인 창으로 바뀝니다.\n\n5. 사용자의 선택\n동의하지 않으면 Bourget은 아무 정보도 확인하지 않습니다. 접근성 서비스는 언제든 기기 설정에서 끌 수 있습니다.\n\n6. 변경\n확인하거나 저장하는 정보가 바뀌면 앱에서 다시 안내하고 동의를 받습니다.\n\n7. 문의\nhttps://github.com/sungyupjoo/Bourget/issues</string>
+    <string name="privacy_policy_body">시행일: 2026년 11월 20일\n\n1. 확인하는 정보\nBourget는 접근성 서비스로 다음 정보만 확인합니다.\n• 화면이 바뀔 때 앞에 보이는 앱의 패키지 이름: 사용자가 만든 앱 규칙과 비교하기 위해 사용합니다.\n• 지원 브라우저(Chrome, 삼성 인터넷) 주소창에 표시된 주소: 사용자가 추가한 웹사이트와 비교하기 위해 주소의 도메인만 사용합니다.\n확인한 정보는 비교에만 쓰고 바로 버리며 저장하지 않습니다. 웹페이지 내용, 입력한 글자 등 그 밖의 화면 내용은 읽지 않습니다. 이 안내에 동의하기 전에는 아무 정보도 확인하지 않습니다.\n규칙이 맞으면 확인 창을 띄우거나, 사용자가 규칙에서 선택한 다른 앱을 엽니다. 다른 앱을 열 때도 추가로 확인하거나 저장하는 정보는 없습니다.\n\n2. 저장하는 정보\n• 사용자가 만든 앱 규칙: 앱의 패키지 이름, 켜짐 여부, 동작(확인 창 또는 다른 앱 실행), 실행할 앱의 패키지 이름\n• 사용자가 추가한 웹사이트 규칙: 도메인, 켜짐 여부, 동작, 실행할 앱의 패키지 이름\n• 사용자가 정한 확인 창 문구\n• 소개 화면을 본 적 있는지와 이 안내에 동의한 버전\n이 정보는 이 기기에만 저장되며 클라우드 백업에서 제외됩니다. 앱 사용 내역과 방문 기록은 저장하지 않습니다.\n\n3. 전송과 공유\nBourget는 인터넷 권한이 없어 어떤 정보도 기기 밖으로 전송하거나 제3자와 공유하지 않습니다. 광고, 분석, 오류 보고 도구를 사용하지 않습니다. 설정의 "소스 코드"를 누르면 기기의 브라우저가 소스 코드 페이지를 엽니다.\n\n4. 보관과 삭제\n저장된 정보는 규칙을 지우거나, 앱 데이터를 삭제하거나, 앱을 삭제하면 지워집니다. 삭제된 앱의 규칙은 Bourget를 열 때 정리되고, 실행할 앱이 삭제된 규칙은 확인 창으로 바뀝니다.\n\n5. 사용자의 선택\n동의하지 않으면 Bourget는 아무 정보도 확인하지 않습니다. 접근성 서비스는 언제든 기기 설정에서 끌 수 있습니다.\n\n6. 변경\n확인하거나 저장하는 정보가 바뀌면 앱에서 다시 안내하고 동의를 받습니다.\n\n7. 문의\nhttps://github.com/sungyupjoo/Bourget/issues</string>
 </resources>
