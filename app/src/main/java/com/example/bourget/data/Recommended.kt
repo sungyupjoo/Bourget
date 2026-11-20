@@ -28,11 +28,8 @@ val RECOMMENDED_PACKAGES = listOf(
     "net.cj.cjhv.gs.tving", // TVING
     "kr.co.captv.pooqV2", // wavve
     "com.coupang.mobile.play", // 쿠팡플레이
-    // Portals, communities, webtoons and shopping
-    "com.nhn.android.search", // 네이버
+    // Communities and webtoons
     "com.nhn.android.navercafe", // 네이버 카페
     "com.nhn.android.webtoon", // 네이버 웹툰
     "com.kakao.page", // 카카오페이지
-    "com.towneers.www", // 당근
-    "com.coupang.mobile", // 쿠팡
 )
