@@ -4,8 +4,12 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.imePadding
+import androidx.compose.foundation.layout.isImeVisible
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.rememberScrollState
@@ -15,6 +19,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -54,6 +59,7 @@ import com.example.bourget.data.templateLength
  * An empty template is reported only on save; other errors as soon as they appear. Leaving
  * with unsaved changes asks first.
  */
+@OptIn(ExperimentalLayoutApi::class)
 @Composable
 fun TemplateEditorScreen(
     saved: String,
@@ -75,8 +81,6 @@ fun TemplateEditorScreen(
     val tryBack = { if (dirty) confirmDiscard = true else onBack() }
     BackHandler(onBack = tryBack)
 
-    // At large font sizes the preview would crowd out the field, so it scrolls with the rest.
-    val largeFont = LocalDensity.current.fontScale >= 1.5f
     val preview = @Composable {
         Column(Modifier.padding(horizontal = ScreenMargin), verticalArrangement = Arrangement.spacedBy(8.dp)) {
             Row(Modifier.selectableGroup(), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
@@ -89,13 +93,8 @@ fun TemplateEditorScreen(
             )
         }
     }
-
-    Column(modifier) {
-        BackBar(onBack = tryBack)
-        ScreenTitle(stringResource(R.string.template_title), Modifier.padding(bottom = 16.dp))
-        if (!largeFont) preview()
-        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(top = 16.dp)) {
-            if (largeFont) preview()
+    val input = @Composable {
+        Column(Modifier.padding(top = 8.dp)) {
             CompactTextField(
                 value = value,
                 onValueChange = {
@@ -128,42 +127,76 @@ fun TemplateEditorScreen(
                 stringResource(if (NAME_PLACEHOLDER in text || text.isBlank()) R.string.template_hint else R.string.template_no_name),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = ScreenMargin),
+                modifier = Modifier.padding(horizontal = ScreenMargin).padding(bottom = 16.dp),
             )
-            SectionHeader(stringResource(R.string.template_examples), Modifier.padding(top = 32.dp))
-            Column(Modifier.selectableGroup()) {
-                TEMPLATE_EXAMPLES.forEachIndexed { i, example ->
-                    if (i > 0) RowRule()
-                    Row(
-                        Modifier
-                            .fillMaxWidth()
-                            .selectable(example == text, role = Role.RadioButton) {
-                                value = TextFieldValue(example, TextRange(example.length))
-                                showEmptyError = false
-                            }
-                            .padding(horizontal = ScreenMargin, vertical = 18.dp),
-                        verticalAlignment = Alignment.CenterVertically,
-                    ) {
-                        Text(
-                            if (example == DEFAULT_TEMPLATE) "$example ${stringResource(R.string.template_default_suffix)}" else example,
-                            style = MaterialTheme.typography.bodyLarge,
-                            modifier = Modifier.weight(1f),
-                        )
-                        if (example == text) Icon(Icons.Default.Check, contentDescription = null)
-                    }
+        }
+    }
+    val examples = @Composable {
+        Text(
+            stringResource(R.string.template_examples),
+            style = MaterialTheme.typography.titleMedium,
+            modifier = Modifier.padding(horizontal = ScreenMargin).padding(top = 20.dp, bottom = 4.dp),
+        )
+        Column(Modifier.selectableGroup()) {
+            TEMPLATE_EXAMPLES.forEachIndexed { i, example ->
+                if (i > 0) RowRule()
+                Row(
+                    Modifier
+                        .fillMaxWidth()
+                        .selectable(example == text, role = Role.RadioButton) {
+                            value = TextFieldValue(example, TextRange(example.length))
+                            showEmptyError = false
+                        }
+                        .padding(horizontal = ScreenMargin, vertical = 18.dp),
+                    verticalAlignment = Alignment.CenterVertically,
+                ) {
+                    Text(
+                        if (example == DEFAULT_TEMPLATE) "$example ${stringResource(R.string.template_default_suffix)}" else example,
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.weight(1f),
+                    )
+                    if (example == text) Icon(Icons.Default.Check, contentDescription = null)
                 }
             }
         }
-        Column(Modifier.padding(horizontal = ScreenMargin, vertical = 12.dp), verticalArrangement = Arrangement.spacedBy(4.dp)) {
-            PrimaryButton(stringResource(R.string.template_save), onClick = {
-                if (templateError(text) == null) onSave(text) else showEmptyError = true
-            })
+    }
+
+    // Fixed: title, preview and input. Scrolling: the examples, between an ink rule (top) and a
+    // light rule (bottom). Fixed: the buttons, kept above the keyboard. While the keyboard is
+    // open the preview folds away so the field and buttons stay visible. At large font sizes the
+    // fixed part would fill the screen, so preview, input and examples scroll together instead.
+    val largeFont = LocalDensity.current.fontScale >= 1.5f
+    val keyboardOpen = WindowInsets.isImeVisible
+    Column(modifier.imePadding()) {
+        BackBar(onBack = tryBack)
+        ScreenTitle(stringResource(R.string.template_title), Modifier.padding(bottom = 16.dp))
+        if (!largeFont) {
+            if (!keyboardOpen) preview()
+            input()
+        }
+        InkRule(Modifier.padding(horizontal = ScreenMargin))
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) {
+            if (largeFont) {
+                if (!keyboardOpen) Column(Modifier.padding(top = 16.dp)) { preview() }
+                input()
+            }
+            examples()
+        }
+        HorizontalDivider(thickness = 1.dp, color = MaterialTheme.colorScheme.outlineVariant)
+        // One row keeps the fixed part short enough to leave room for the examples.
+        Row(
+            Modifier.padding(start = 12.dp, end = ScreenMargin, top = 12.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(12.dp),
+        ) {
             // Changes only the field; saving is still a separate step.
             UnderlineButton(
                 stringResource(R.string.template_reset),
                 onClick = { value = TextFieldValue(DEFAULT_TEMPLATE, TextRange(DEFAULT_TEMPLATE.length)) },
-                modifier = Modifier.fillMaxWidth(),
             )
+            PrimaryButton(stringResource(R.string.template_save), modifier = Modifier.weight(1f), onClick = {
+                if (templateError(text) == null) onSave(text) else showEmptyError = true
+            })
         }
     }
 
@@ -200,7 +233,7 @@ private fun PreviewTab(label: String, selected: Boolean, onClick: () -> Unit) {
         textDecoration = if (selected) TextDecoration.Underline else null,
         modifier = Modifier
             .selectable(selected, role = Role.Tab, onClick = onClick)
-            .padding(vertical = 8.dp),
+            .padding(vertical = 6.dp),
     )
 }
 
@@ -211,17 +244,17 @@ private fun PopupPreview(title: String, app: LaunchableApp?) {
         Modifier
             .fillMaxWidth()
             .background(Color(0xFF141312))
-            .padding(horizontal = 20.dp, vertical = 24.dp),
-        verticalArrangement = Arrangement.spacedBy(12.dp),
+            .padding(horizontal = 20.dp, vertical = 16.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         if (app != null) {
-            AppIcon(app, 28.dp)
+            AppIcon(app, 24.dp)
         } else {
-            Icon(painterResource(R.drawable.ic_link), contentDescription = null, tint = Color(0xFFBDB7AE), modifier = Modifier.size(28.dp))
+            Icon(painterResource(R.drawable.ic_link), contentDescription = null, tint = Color(0xFFBDB7AE), modifier = Modifier.size(24.dp))
         }
         Text(
             title,
-            style = MaterialTheme.typography.headlineSmall.copy(fontSize = 22.sp, lineHeight = 30.sp),
+            style = MaterialTheme.typography.headlineSmall.copy(fontSize = 18.sp, lineHeight = 26.sp),
             color = Color(0xFFF4F1EC),
         )
     }
