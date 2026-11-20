@@ -74,9 +74,22 @@ class ConfirmOverlay(private val service: AccessibilityService) {
             gravity = Gravity.BOTTOM
             setPadding(dp(32), dp(40), dp(32), dp(80))
         }
-        if (icon != null) {
-            content.addView(ImageView(context).apply { setImageDrawable(icon) }, LinearLayout.LayoutParams(dp(36), dp(36)))
+        // The icon with a quiet "Bourget" beside it, so the pause is not mistaken for the app's own.
+        val header = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
         }
+        if (icon != null) {
+            header.addView(ImageView(context).apply { setImageDrawable(icon) }, LinearLayout.LayoutParams(dp(36), dp(36)))
+        }
+        header.addView(TextView(context).apply {
+            setText(R.string.app_name)
+            typeface = ResourcesCompat.getFont(context, R.font.line_seed_kr_regular)
+            setTextColor(PAPER_VARIANT)
+            setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+            if (icon != null) setPadding(dp(12), 0, 0, 0)
+        })
+        content.addView(header)
         val question = TextView(context).apply {
             text = title
             typeface = bold
