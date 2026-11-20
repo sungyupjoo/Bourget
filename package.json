@@ -1,0 +1,10 @@
+{
+  "name": "bourget",
+  "private": true,
+  "description": "Build shortcuts for the Bourget Android app (no dependencies; runs Gradle).",
+  "scripts": {
+    "apk": "scripts/build-apk.sh debug",
+    "apk:release": "scripts/build-apk.sh release",
+    "test": "./gradlew testDebugUnitTest"
+  }
+}
