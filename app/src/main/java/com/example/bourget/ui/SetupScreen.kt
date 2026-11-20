@@ -4,12 +4,13 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
+import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -40,21 +41,26 @@ fun SetupScreen(
 ) {
     var showPrivacy by rememberSaveable { mutableStateOf(false) }
 
-    Column(modifier = modifier.fillMaxSize().padding(24.dp)) {
+    Column(modifier = modifier.fillMaxSize().padding(horizontal = 28.dp, vertical = 24.dp)) {
         Column(
             modifier = Modifier
                 .weight(1f)
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
-            Text(stringResource(R.string.app_name), style = MaterialTheme.typography.headlineMedium)
+            Text(
+                stringResource(R.string.app_name),
+                style = MaterialTheme.typography.labelLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+            )
+            Text(stringResource(R.string.main_disclosure_title), style = MaterialTheme.typography.displaySmall)
+            HorizontalDivider(color = MaterialTheme.colorScheme.onSurface)
             if (!consented && serviceEnabled) {
                 // The service is on (e.g. enabled from system settings, or the disclosure changed
                 // in an update) but stays idle until the user agrees here.
                 Text(stringResource(R.string.consent_required_note), style = MaterialTheme.typography.bodyMedium)
             }
-            Text(stringResource(R.string.main_disclosure_title), style = MaterialTheme.typography.titleMedium)
-            Text(stringResource(R.string.main_disclosure_body), style = MaterialTheme.typography.bodyMedium)
+            Text(stringResource(R.string.main_disclosure_body), style = MaterialTheme.typography.bodyLarge)
             TextButton(onClick = { showPrivacy = true }) {
                 Text(stringResource(R.string.privacy_policy_open))
             }
@@ -63,7 +69,8 @@ fun SetupScreen(
             onClick = if (consented) onOpenSettings else onAgree,
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(top = 16.dp),
+                .padding(top = 16.dp)
+                .heightIn(min = 52.dp),
         ) {
             Text(
                 stringResource(
@@ -76,7 +83,7 @@ fun SetupScreen(
             )
         }
         if (!consented) {
-            OutlinedButton(onClick = onDecline, modifier = Modifier.fillMaxWidth()) {
+            TextButton(onClick = onDecline, modifier = Modifier.fillMaxWidth().heightIn(min = 48.dp)) {
                 Text(stringResource(R.string.consent_decline))
             }
         }
