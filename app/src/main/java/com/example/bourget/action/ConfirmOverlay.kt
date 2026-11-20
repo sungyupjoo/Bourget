@@ -16,12 +16,12 @@ class ConfirmOverlay(private val service: AccessibilityService) {
 
     private var dialog: AlertDialog? = null
 
-    fun show(onGoBack: () -> Unit) {
+    fun show(appLabel: String, onGoBack: () -> Unit) {
         if (dialog?.isShowing == true) return
 
         val themed = ContextThemeWrapper(service, android.R.style.Theme_DeviceDefault_Light_Dialog_Alert)
         dialog = AlertDialog.Builder(themed)
-            .setTitle(R.string.confirm_title)
+            .setTitle(service.getString(R.string.confirm_title, appLabel, objectParticle(appLabel)))
             .setPositiveButton(R.string.confirm_continue, null)
             .setNegativeButton(R.string.confirm_go_back) { _, _ -> onGoBack() }
             .setCancelable(false)
@@ -40,4 +40,14 @@ class ConfirmOverlay(private val service: AccessibilityService) {
         dialog?.dismiss()
         dialog = null
     }
+}
+
+/**
+ * Korean object particle for [word]: "을" after a final consonant, "를" otherwise.
+ * Falls back to "을(를)" when the word does not end in a Hangul syllable (e.g. "YouTube").
+ */
+internal fun objectParticle(word: String): String {
+    val last = word.trimEnd().lastOrNull()
+    if (last == null || last !in '가'..'힣') return "을(를)"
+    return if ((last - '가') % 28 != 0) "을" else "를"
 }

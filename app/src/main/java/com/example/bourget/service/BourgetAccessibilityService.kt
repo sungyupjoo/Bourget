@@ -2,6 +2,7 @@ package com.example.bourget.service
 
 import android.accessibilityservice.AccessibilityService
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.os.SystemClock
 import android.view.accessibility.AccessibilityEvent
 import android.view.inputmethod.InputMethodManager
@@ -39,11 +40,17 @@ class BourgetAccessibilityService : AccessibilityService() {
         if (pkg in ignoredPackages) return
 
         if (detector.onForegroundChanged(pkg, SystemClock.elapsedRealtime())) {
-            overlay.show(onGoBack = { performGlobalAction(GLOBAL_ACTION_HOME) })
+            overlay.show(appLabel(pkg), onGoBack = { performGlobalAction(GLOBAL_ACTION_HOME) })
         } else if (pkg !in detector.targetPackages) {
             // User left the target app some other way; don't leave the dialog floating.
             overlay.dismiss()
         }
+    }
+
+    private fun appLabel(pkg: String): String = try {
+        packageManager.getApplicationInfo(pkg, 0).loadLabel(packageManager).toString()
+    } catch (e: PackageManager.NameNotFoundException) {
+        pkg
     }
 
     override fun onInterrupt() {
