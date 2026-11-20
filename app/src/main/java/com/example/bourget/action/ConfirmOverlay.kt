@@ -16,13 +16,14 @@ class ConfirmOverlay(private val service: AccessibilityService) {
 
     private var dialog: AlertDialog? = null
 
-    fun show(appLabel: String, onGoBack: () -> Unit) {
+    fun show(title: String, message: String? = null, onGoBack: () -> Unit) {
         if (dialog?.isShowing == true) return
 
         var goBackChosen = false
         val themed = ContextThemeWrapper(service, android.R.style.Theme_DeviceDefault_Light_Dialog_Alert)
         dialog = AlertDialog.Builder(themed)
-            .setTitle(service.getString(R.string.confirm_title, appLabel, objectParticle(appLabel)))
+            .setTitle(title)
+            .setMessage(message)
             .setPositiveButton(R.string.confirm_continue, null)
             .setNegativeButton(R.string.confirm_go_back) { _, _ -> goBackChosen = true }
             .setCancelable(false)
