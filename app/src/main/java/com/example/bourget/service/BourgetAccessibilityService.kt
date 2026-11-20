@@ -7,7 +7,12 @@ import android.os.SystemClock
 import android.view.accessibility.AccessibilityEvent
 import android.view.inputmethod.InputMethodManager
 import com.example.bourget.action.ConfirmOverlay
+import com.example.bourget.data.TargetAppsStore
 import com.example.bourget.detection.AppLaunchDetector
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.MainScope
+import kotlinx.coroutines.cancel
+import kotlinx.coroutines.launch
 
 /**
  * Receives only TYPE_WINDOW_STATE_CHANGED events and reads only their package name.
@@ -17,11 +22,19 @@ class BourgetAccessibilityService : AccessibilityService() {
 
     private val overlay = ConfirmOverlay(this)
     private var detector: AppLaunchDetector? = null
+    private var scope: CoroutineScope? = null
     private var ignoredPackages: Set<String> = emptySet()
 
     override fun onServiceConnected() {
-        // Step 1: hard-coded YouTube rule. Replaced by user rules in a later step.
-        detector = AppLaunchDetector(targetPackages = setOf(YOUTUBE_PACKAGE))
+        val detector = AppLaunchDetector(targetPackages = emptySet())
+        this.detector = detector
+        // Keep targets in sync with the user's selection while the service is connected.
+        scope = MainScope().apply {
+            launch {
+                TargetAppsStore(this@BourgetAccessibilityService).targetPackages
+                    .collect { detector.targetPackages = it }
+            }
+        }
         // Windows that appear on top of an app without the user leaving it
         // (our own overlay, system UI, keyboards) must not count as an app switch.
         val imePackages = getSystemService(InputMethodManager::class.java)
@@ -59,12 +72,13 @@ class BourgetAccessibilityService : AccessibilityService() {
 
     override fun onUnbind(intent: Intent?): Boolean {
         overlay.dismiss()
+        scope?.cancel()
+        scope = null
         detector = null
         return super.onUnbind(intent)
     }
 
     private companion object {
-        const val YOUTUBE_PACKAGE = "com.google.android.youtube"
         const val SYSTEM_UI_PACKAGE = "com.android.systemui"
     }
 }

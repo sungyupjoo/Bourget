@@ -42,6 +42,24 @@ class AppLaunchDetectorTest {
     }
 
     @Test
+    fun cooldownIsPerApp() {
+        val d = AppLaunchDetector(setOf(yt, other), cooldownMillis = 30_000)
+        assertTrue(d.onForegroundChanged(yt, 0))
+        // A different target app is not blocked by YouTube's cooldown.
+        assertTrue(d.onForegroundChanged(other, 1_000))
+        assertFalse(d.onForegroundChanged(yt, 2_000))
+    }
+
+    @Test
+    fun updatedTargetsApplyToNextSwitch() {
+        val d = detector()
+        assertFalse(d.onForegroundChanged(other, 0))
+        d.targetPackages = setOf(yt, other)
+        d.onForegroundChanged(launcher, 1_000)
+        assertTrue(d.onForegroundChanged(other, 2_000))
+    }
+
+    @Test
     fun reEnteringAfterCooldownTriggersAgain() {
         val d = detector()
         assertTrue(d.onForegroundChanged(yt, 0))

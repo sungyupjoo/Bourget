@@ -4,11 +4,11 @@ package com.example.bourget.detection
  * Decides whether a foreground-app change should trigger an intervention.
  *
  * Triggers only when the foreground moves *into* a target package from a different package,
- * and not again for the same package until [cooldownMillis] has elapsed.
+ * and not again for the same package until [cooldownMillis] has elapsed. Cooldowns are per package.
  * Pure Kotlin (no Android types) so it can be unit tested.
  */
 class AppLaunchDetector(
-    val targetPackages: Set<String>,
+    var targetPackages: Set<String>,
     private val cooldownMillis: Long = DEFAULT_COOLDOWN_MILLIS,
 ) {
     private var foregroundPackage: String? = null
