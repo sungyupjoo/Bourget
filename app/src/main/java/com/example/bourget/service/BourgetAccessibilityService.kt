@@ -110,6 +110,7 @@ class BourgetAccessibilityService : AccessibilityService() {
             val label = appLabel(pkg)
             overlay.show(
                 title = getString(R.string.confirm_title, label, objectParticle(label)),
+                icon = appIcon(pkg),
                 onGoBack = { performGlobalAction(GLOBAL_ACTION_HOME) },
             )
         } else if (switched && pkg !in appDetector.targetPackages) {
@@ -163,6 +164,12 @@ class BourgetAccessibilityService : AccessibilityService() {
         packageManager.getApplicationInfo(pkg, 0).loadLabel(packageManager).toString()
     } catch (e: PackageManager.NameNotFoundException) {
         pkg
+    }
+
+    private fun appIcon(pkg: String) = try {
+        packageManager.getApplicationIcon(pkg)
+    } catch (e: PackageManager.NameNotFoundException) {
+        null
     }
 
     override fun onInterrupt() {
