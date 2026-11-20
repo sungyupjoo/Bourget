@@ -21,6 +21,9 @@ import kotlinx.coroutines.cancel
 import kotlinx.coroutines.launch
 
 /**
+ * Does nothing until the user has agreed to the current in-app disclosure (the service can be
+ * enabled from system settings without ever opening Bourget).
+ *
  * App rules: uses only the package name of TYPE_WINDOW_STATE_CHANGED events.
  * Website rules: in supported browsers only, reads the address bar node (by view id) and keeps
  * just its host. Page content is never read, and nothing read from the screen is stored.
@@ -34,6 +37,7 @@ class BourgetAccessibilityService : AccessibilityService() {
     private var scope: CoroutineScope? = null
     private var ignoredPackages: Set<String> = emptySet()
     private var currentApp: String? = null
+    private var consented = false
 
     private val handler = Handler(Looper.getMainLooper())
     private val urlCheck = Runnable { checkPending = false; checkBrowserUrl() }
@@ -48,6 +52,16 @@ class BourgetAccessibilityService : AccessibilityService() {
         // Keep targets in sync with the user's rules while the service is connected.
         val store = TargetAppsStore(this)
         scope = MainScope().apply {
+            launch {
+                store.consentedToCurrentDisclosure.collect {
+                    consented = it
+                    if (!it) {
+                        overlay.dismiss()
+                        handler.removeCallbacks(urlCheck)
+                        checkPending = false
+                    }
+                }
+            }
             launch { store.targetPackages.collect { appDetector.targetPackages = it } }
             launch {
                 store.websiteRules.collect { rules ->
@@ -63,6 +77,7 @@ class BourgetAccessibilityService : AccessibilityService() {
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
+        if (!consented) return
         val pkg = event.packageName?.toString() ?: return
         when (event.eventType) {
             AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED -> {
@@ -163,6 +178,7 @@ class BourgetAccessibilityService : AccessibilityService() {
         appDetector = null
         webDetector = null
         currentApp = null
+        consented = false
         return super.onUnbind(intent)
     }
 

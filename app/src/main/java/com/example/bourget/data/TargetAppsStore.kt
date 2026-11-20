@@ -4,6 +4,7 @@ import android.content.Context
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
@@ -16,8 +17,16 @@ private val Context.settingsDataStore by preferencesDataStore(name = "settings")
 data class WebsiteRule(val domain: String, val enabled: Boolean)
 
 /**
- * Stores only the user's rules: selected app package names and website rule domains.
- * Visited URLs or anything read from the screen are never persisted.
+ * Version of the in-app disclosure (what the service reads and stores). Bump it whenever that
+ * changes: every user must then agree again before the service processes anything.
+ * 1: app package names only (never recorded). 2: adds the browser address bar.
+ */
+const val DISCLOSURE_VERSION = 2
+
+/**
+ * Stores only the user's rules (selected app package names, website rule domains) and which
+ * disclosure version the user agreed to. Visited URLs or anything read from the screen are
+ * never persisted.
  */
 class TargetAppsStore(context: Context) {
 
@@ -27,6 +36,14 @@ class TargetAppsStore(context: Context) {
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
 
     val targetPackages: Flow<Set<String>> = prefs.map { it[TARGET_PACKAGES] ?: emptySet() }
+
+    /** True once the user agreed to the current [DISCLOSURE_VERSION] in the app. */
+    val consentedToCurrentDisclosure: Flow<Boolean> =
+        prefs.map { (it[CONSENT_VERSION] ?: 0) >= DISCLOSURE_VERSION }
+
+    suspend fun recordConsent() {
+        dataStore.edit { it[CONSENT_VERSION] = DISCLOSURE_VERSION }
+    }
 
     val websiteRules: Flow<List<WebsiteRule>> = prefs.map { p ->
         val disabled = p[WEBSITE_DISABLED] ?: emptySet()
@@ -75,5 +92,6 @@ class TargetAppsStore(context: Context) {
         val TARGET_PACKAGES = stringSetPreferencesKey("target_packages")
         val WEBSITE_DOMAINS = stringSetPreferencesKey("website_domains")
         val WEBSITE_DISABLED = stringSetPreferencesKey("website_disabled")
+        val CONSENT_VERSION = intPreferencesKey("consent_version")
     }
 }

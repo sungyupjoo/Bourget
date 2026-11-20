@@ -15,6 +15,8 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.outlined.Info
@@ -82,6 +84,7 @@ fun AppPickerScreen(store: TargetAppsStore, refreshKey: Int, onOpenSettings: () 
     val selected by store.targetPackages.collectAsState(initial = emptySet())
     var query by rememberSaveable { mutableStateOf("") }
     var showInfo by rememberSaveable { mutableStateOf(false) }
+    var showPrivacy by rememberSaveable { mutableStateOf(false) }
     var tab by rememberSaveable { mutableIntStateOf(0) }
     val scope = rememberCoroutineScope()
     val toggle: (LaunchableApp) -> Unit = { app ->
@@ -141,7 +144,15 @@ fun AppPickerScreen(store: TargetAppsStore, refreshKey: Int, onOpenSettings: () 
         AlertDialog(
             onDismissRequest = { showInfo = false },
             title = { Text(stringResource(R.string.main_disclosure_title)) },
-            text = { Text(stringResource(R.string.main_disclosure_body)) },
+            text = {
+                Column(Modifier.verticalScroll(rememberScrollState())) {
+                    Text(stringResource(R.string.main_disclosure_body))
+                    TextButton(onClick = {
+                        showInfo = false
+                        showPrivacy = true
+                    }) { Text(stringResource(R.string.privacy_policy_open)) }
+                }
+            },
             confirmButton = {
                 TextButton(onClick = {
                     showInfo = false
@@ -153,6 +164,7 @@ fun AppPickerScreen(store: TargetAppsStore, refreshKey: Int, onOpenSettings: () 
             },
         )
     }
+    if (showPrivacy) PrivacyPolicyDialog(onDismiss = { showPrivacy = false })
 }
 
 @Composable

@@ -18,6 +18,9 @@
 - Use the minimum necessary Android permissions.
 - Keep the in-app disclosure and accessibility service description accurate whenever what
   the service reads or stores changes.
+- The service must not process any event before the user agrees to the in-app disclosure.
+  When what it reads or stores changes, bump `DISCLOSURE_VERSION` (TargetAppsStore.kt) so every
+  user agrees again, and update `PRIVACY.md` and the in-app privacy policy together.
 
 ## Engineering
 
