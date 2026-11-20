@@ -1,11 +1,9 @@
 package com.example.bourget
 
-import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.ComponentName
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
-import android.view.accessibility.AccessibilityManager
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -57,11 +55,16 @@ class MainActivity : ComponentActivity() {
         serviceEnabled = isServiceEnabled()
     }
 
+    /**
+     * Reads the user's setting rather than AccessibilityManager's enabled list: that list only
+     * contains currently bound services, so it is briefly false right after an app update while
+     * the system rebinds the service.
+     */
     private fun isServiceEnabled(): Boolean {
         val expected = ComponentName(this, BourgetAccessibilityService::class.java)
-        return getSystemService(AccessibilityManager::class.java)
-            .getEnabledAccessibilityServiceList(AccessibilityServiceInfo.FEEDBACK_ALL_MASK)
-            .any { ComponentName.unflattenFromString(it.id) == expected }
+        val enabled = Settings.Secure.getString(contentResolver, Settings.Secure.ENABLED_ACCESSIBILITY_SERVICES)
+            ?: return false
+        return enabled.split(':').any { ComponentName.unflattenFromString(it) == expected }
     }
 }
 
