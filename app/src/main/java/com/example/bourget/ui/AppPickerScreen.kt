@@ -70,7 +70,11 @@ fun AppPickerScreen(store: TargetAppsStore, refreshKey: Int, onOpenSettings: () 
     // Reloaded on every resume ([refreshKey]) so apps installed or removed while Bourget was in
     // the background are reflected. The previous list stays on screen while reloading.
     LaunchedEffect(refreshKey) {
-        apps = withContext(Dispatchers.IO) { loadLaunchableApps(context, iconSizePx) }
+        val loaded = withContext(Dispatchers.IO) { loadLaunchableApps(context, iconSizePx) }
+        apps = loaded
+        // Forget selections for apps that are gone. An empty result is treated as a failed
+        // query, never as "nothing installed", so it cannot wipe the whole selection.
+        if (loaded.isNotEmpty()) store.retainOnly(loaded.map { it.packageName }.toSet())
     }
     val selected by store.targetPackages.collectAsState(initial = emptySet())
     var query by rememberSaveable { mutableStateOf("") }

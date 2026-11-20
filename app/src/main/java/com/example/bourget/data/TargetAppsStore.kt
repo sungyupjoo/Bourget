@@ -28,6 +28,15 @@ class TargetAppsStore(context: Context) {
         }
     }
 
+    /** Drops selected packages that are no longer in [installed] (uninstalled or disabled apps). */
+    suspend fun retainOnly(installed: Set<String>) {
+        dataStore.edit { prefs ->
+            val current = prefs[TARGET_PACKAGES] ?: return@edit
+            val kept = current intersect installed
+            if (kept != current) prefs[TARGET_PACKAGES] = kept
+        }
+    }
+
     private companion object {
         val TARGET_PACKAGES = stringSetPreferencesKey("target_packages")
     }
