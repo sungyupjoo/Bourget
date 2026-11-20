@@ -9,8 +9,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
@@ -325,6 +323,7 @@ private fun HomeScreen(
                 onEnabledChange = { rule, on ->
                     scope.launch { store.updateRule(RuleKind.APP, rule.target) { it.copy(enabled = on) } }
                 },
+                onReorder = { targets -> scope.launch { store.reorderRules(RuleKind.APP, targets) } },
                 modifier = Modifier.weight(1f),
             )
         } else {
@@ -362,6 +361,7 @@ private fun AppRulesTab(
     onAddApp: () -> Unit,
     onOpenRule: (String) -> Unit,
     onEnabledChange: (Rule, Boolean) -> Unit,
+    onReorder: (List<String>) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     Column(modifier) {
@@ -386,19 +386,15 @@ private fun AppRulesTab(
             ) {
                 PrimaryButton(stringResource(R.string.app_add), onClick = onAddApp, modifier = Modifier.padding(top = 16.dp))
             }
-            else -> LazyColumn(Modifier.fillMaxSize()) {
-                itemsIndexed(rules, key = { _, rule -> rule.target }) { i, rule ->
-                    if (i > 0) RowRule()
-                    RuleRow(
-                        kind = RuleKind.APP,
-                        rule = rule,
-                        name = apps.label(rule.target),
-                        apps = apps,
-                        onEnabledChange = { onEnabledChange(rule, it) },
-                        onClick = { onOpenRule(rule.target) },
-                    )
-                }
-            }
+            else -> ReorderableRuleList(
+                kind = RuleKind.APP,
+                rules = rules,
+                apps = apps,
+                nameOf = { apps.label(it.target) },
+                onEnabledChange = onEnabledChange,
+                onOpenRule = { onOpenRule(it.target) },
+                onReorder = onReorder,
+            )
         }
     }
 }

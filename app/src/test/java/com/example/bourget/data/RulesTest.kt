@@ -45,6 +45,14 @@ class RulesTest {
     }
 
     @Test
+    fun reorderedFollowsTheDraggedOrderAndKeepsRulesItDoesNotName() {
+        val rules = listOf(Rule(yt), Rule(ig, enabled = false), Rule(anki))
+        assertEquals(listOf(Rule(anki), Rule(yt), Rule(ig, enabled = false)), rules.reordered(listOf(anki, yt, ig)))
+        // A rule added during the drag stays; an unknown target is ignored.
+        assertEquals(listOf(Rule(ig, enabled = false), Rule(yt), Rule(anki)), rules.reordered(listOf(ig, "gone", yt)))
+    }
+
+    @Test
     fun retainInstalledDropsGoneAppsAndResetsGoneLaunchTargets() {
         val apps = listOf(Rule(yt).withLaunch(anki), Rule(ig))
         assertEquals(listOf(Rule(yt)), apps.retainInstalled(RuleKind.APP, setOf(yt)))

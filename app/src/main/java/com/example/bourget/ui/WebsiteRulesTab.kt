@@ -7,8 +7,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
@@ -131,21 +129,17 @@ fun WebsiteRulesTab(
                 stringResource(R.string.rules_empty_title),
                 stringResource(R.string.rules_empty_websites),
             )
-            else -> LazyColumn(Modifier.fillMaxSize()) {
-                itemsIndexed(rules, key = { _, rule -> rule.target }) { i, rule ->
-                    if (i > 0) RowRule()
-                    RuleRow(
-                        kind = RuleKind.WEBSITE,
-                        rule = rule,
-                        name = rule.target,
-                        apps = apps,
-                        onEnabledChange = { on ->
-                            scope.launch { store.updateRule(RuleKind.WEBSITE, rule.target) { it.copy(enabled = on) } }
-                        },
-                        onClick = { onOpenRule(rule.target) },
-                    )
-                }
-            }
+            else -> ReorderableRuleList(
+                kind = RuleKind.WEBSITE,
+                rules = rules,
+                apps = apps,
+                nameOf = { it.target },
+                onEnabledChange = { rule, on ->
+                    scope.launch { store.updateRule(RuleKind.WEBSITE, rule.target) { it.copy(enabled = on) } }
+                },
+                onOpenRule = { onOpenRule(it.target) },
+                onReorder = { targets -> scope.launch { store.reorderRules(RuleKind.WEBSITE, targets) } },
+            )
         }
     }
 }

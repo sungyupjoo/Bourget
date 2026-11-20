@@ -167,11 +167,12 @@ fun RuleRow(
     apps: AppDirectory,
     onEnabledChange: (Boolean) -> Unit,
     onClick: (() -> Unit)?,
+    modifier: Modifier = Modifier,
     trailing: @Composable () -> Unit = {},
 ) {
     val switchLabel = stringResource(R.string.rule_switch, name)
     Row(
-        Modifier
+        modifier
             .fillMaxWidth()
             .then(if (onClick != null) Modifier.clickable(onClick = onClick) else Modifier)
             .padding(start = ScreenMargin, end = 16.dp, top = 18.dp, bottom = 18.dp),

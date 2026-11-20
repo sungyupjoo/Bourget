@@ -31,6 +31,16 @@ fun List<Rule>.without(target: String): List<Rule> = filterNot { it.target == ta
 fun List<Rule>.updated(target: String, transform: (Rule) -> Rule): List<Rule> =
     map { if (it.target == target) transform(it) else it }
 
+/**
+ * Puts rules in the order of [targets] (a drag on screen). Rules missing from [targets], e.g. added
+ * while dragging, keep their place after the ordered ones; unknown targets are ignored.
+ */
+fun List<Rule>.reordered(targets: List<String>): List<Rule> {
+    val byTarget = associateBy { it.target }
+    val ordered = targets.distinct().mapNotNull { byTarget[it] }
+    return ordered + filter { it !in ordered }
+}
+
 /** Sets the action to "launch [launchPackage]", or back to "confirm" when it is null. */
 fun Rule.withLaunch(launchPackage: String?): Rule =
     if (launchPackage == null) copy(action = RuleAction.CONFIRM, launchPackage = null)

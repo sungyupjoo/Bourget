@@ -103,6 +103,9 @@ class TargetAppsStore(context: Context) {
 
     suspend fun removeRule(kind: RuleKind, target: String) = editRules(kind) { it.without(target) }
 
+    /** Saves the order the user dragged the rules into. */
+    suspend fun reorderRules(kind: RuleKind, targets: List<String>) = editRules(kind) { it.reordered(targets) }
+
     suspend fun updateRule(kind: RuleKind, target: String, transform: (Rule) -> Rule) =
         editRules(kind) { it.updated(target, transform) }
 
