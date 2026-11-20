@@ -5,9 +5,12 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
+import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
 
 // Ink is the only "primary": switches, checkboxes and filled buttons are drawn in it.
+// Dialogs sit on the same paper as the screen (surfaceContainerHigh = surface).
 private val LightColorScheme = lightColorScheme(
     primary = InkLight,
     onPrimary = OnInkLight,
@@ -23,10 +26,11 @@ private val LightColorScheme = lightColorScheme(
     onSurface = InkLight,
     surfaceVariant = TonalLight,
     onSurfaceVariant = InkVariantLight,
-    surfaceContainerHigh = RaisedLight,
+    surfaceContainerHigh = PaperLight,
     surfaceTint = Color.Transparent,
     outline = OutlineLight,
     outlineVariant = LineLight,
+    error = ErrorLight,
 )
 
 private val DarkColorScheme = darkColorScheme(
@@ -44,20 +48,26 @@ private val DarkColorScheme = darkColorScheme(
     onSurface = InkDark,
     surfaceVariant = TonalDark,
     onSurfaceVariant = InkVariantDark,
-    surfaceContainerHigh = RaisedDark,
+    surfaceContainerHigh = PaperDark,
     surfaceTint = Color.Transparent,
     outline = OutlineDark,
     outlineVariant = LineDark,
+    error = ErrorDark,
 )
+
+/** Text color of an unselected tab: lighter than onSurfaceVariant, still 3:1 at 26sp Bold. */
+val LocalInactiveTab = staticCompositionLocalOf { InactiveTabLight }
 
 @Composable
 fun BourgetTheme(
     darkTheme: Boolean = isSystemInDarkTheme(),
     content: @Composable () -> Unit
 ) {
-    MaterialTheme(
-        colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme,
-        typography = Typography,
-        content = content
-    )
+    CompositionLocalProvider(LocalInactiveTab provides if (darkTheme) InactiveTabDark else InactiveTabLight) {
+        MaterialTheme(
+            colorScheme = if (darkTheme) DarkColorScheme else LightColorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }

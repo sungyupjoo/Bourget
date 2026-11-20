@@ -58,6 +58,7 @@ import com.example.bourget.R
 import com.example.bourget.data.LaunchableApp
 import com.example.bourget.data.TargetAppsStore
 import com.example.bourget.data.loadLaunchableApps
+import com.example.bourget.ui.theme.LocalInactiveTab
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -183,7 +184,7 @@ private fun TextTab(label: String, selected: Boolean, onClick: () -> Unit) {
     Text(
         label,
         style = MaterialTheme.typography.headlineSmall,
-        color = if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+        color = if (selected) MaterialTheme.colorScheme.onSurface else LocalInactiveTab.current,
         modifier = Modifier
             .selectable(selected = selected, onClick = onClick, role = Role.Tab)
             .padding(vertical = 6.dp),
