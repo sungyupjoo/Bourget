@@ -60,7 +60,7 @@ fun SettingsScreen(
                 } catch (e: ActivityNotFoundException) {
                     // No browser installed: nothing to open.
                 }
-            }) { SecondaryText(stringResource(R.string.settings_source_desc)) }
+            }) { SecondaryText(sourceUrl) }
             RowRule()
             SettingRow(stringResource(R.string.settings_version), onClick = null) { SecondaryText(version) }
         }

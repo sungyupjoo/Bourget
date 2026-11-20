@@ -94,7 +94,6 @@
     <string name="settings_section_about">정보</string>
     <string name="settings_licenses">오픈소스 라이선스</string>
     <string name="settings_source">소스 코드</string>
-    <string name="settings_source_desc">브라우저에서 열림</string>
     <string name="settings_version">버전</string>
     <string name="source_url" translatable="false">https://github.com/sungyupjoo/Bourget</string>
     <string name="licenses_title">오픈소스 라이선스</string>
