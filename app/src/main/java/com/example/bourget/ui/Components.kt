@@ -128,14 +128,14 @@ fun AppIcon(app: LaunchableApp?, size: Dp, modifier: Modifier = Modifier) {
     }
 }
 
-/** Icon of a rule's target: the app's own icon, or a globe for a website. */
+/** Icon of a rule's target: the app's own icon, or a link icon for a website. */
 @Composable
 fun RuleIcon(kind: RuleKind, target: String, apps: AppDirectory, size: Dp, modifier: Modifier = Modifier) {
     if (kind == RuleKind.APP) {
         AppIcon(apps?.get(target), size, modifier)
     } else {
         Icon(
-            painterResource(R.drawable.ic_globe),
+            painterResource(R.drawable.ic_link),
             contentDescription = null,
             tint = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = modifier.size(size),

@@ -178,7 +178,7 @@ class BourgetAccessibilityService : AccessibilityService() {
             if (launchInstead(rule?.let { websiteRules[it] }, now)) return
             overlay.show(
                 title = applyTemplate(template, rule ?: host),
-                icon = getDrawable(R.drawable.ic_globe)?.mutate()?.apply { setTint(GLOBE_TINT) },
+                icon = getDrawable(R.drawable.ic_link)?.mutate()?.apply { setTint(LINK_ICON_TINT) },
                 onGoBack = { performGlobalAction(GLOBAL_ACTION_BACK) },
             )
         }
@@ -232,8 +232,8 @@ class BourgetAccessibilityService : AccessibilityService() {
 
     private companion object {
         const val SYSTEM_UI_PACKAGE = "com.android.systemui"
-        // The popup's secondary text color, so the globe reads on its dark background.
-        const val GLOBE_TINT = 0xFFBDB7AE.toInt()
+        // The popup's secondary text color, so the link icon reads on its dark background.
+        const val LINK_ICON_TINT = 0xFFBDB7AE.toInt()
         const val URL_CHECK_DEBOUNCE_MS = 300L
         const val URL_CHECK_MAX_DELAY_MS = 1_000L
     }

@@ -217,7 +217,7 @@ private fun PopupPreview(title: String, app: LaunchableApp?) {
         if (app != null) {
             AppIcon(app, 28.dp)
         } else {
-            Icon(painterResource(R.drawable.ic_globe), contentDescription = null, tint = Color(0xFFBDB7AE), modifier = Modifier.size(28.dp))
+            Icon(painterResource(R.drawable.ic_link), contentDescription = null, tint = Color(0xFFBDB7AE), modifier = Modifier.size(28.dp))
         }
         Text(
             title,
