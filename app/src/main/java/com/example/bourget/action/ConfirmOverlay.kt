@@ -19,16 +19,22 @@ class ConfirmOverlay(private val service: AccessibilityService) {
     fun show(appLabel: String, onGoBack: () -> Unit) {
         if (dialog?.isShowing == true) return
 
+        var goBackChosen = false
         val themed = ContextThemeWrapper(service, android.R.style.Theme_DeviceDefault_Light_Dialog_Alert)
         dialog = AlertDialog.Builder(themed)
             .setTitle(service.getString(R.string.confirm_title, appLabel, objectParticle(appLabel)))
             .setPositiveButton(R.string.confirm_continue, null)
-            .setNegativeButton(R.string.confirm_go_back) { _, _ -> onGoBack() }
+            .setNegativeButton(R.string.confirm_go_back) { _, _ -> goBackChosen = true }
             .setCancelable(false)
             .create()
             .apply {
                 window?.setType(WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY)
-                setOnDismissListener { dialog = null }
+                setOnDismissListener {
+                    dialog = null
+                    // Run only after the dialog window is gone: AlertDialog dismisses after the
+                    // click callback, and a global BACK sent before that is consumed by the dialog.
+                    if (goBackChosen) onGoBack()
+                }
                 show()
                 // Some OEM themes (e.g. Samsung One UI) bottom-align dialogs; set after show()
                 // because the theme applies its gravity while the dialog is being set up.
