@@ -72,7 +72,7 @@ class ConfirmOverlay(private val service: AccessibilityService) {
         val content = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
             gravity = Gravity.BOTTOM
-            setPadding(dp(32), dp(40), dp(32), dp(40))
+            setPadding(dp(32), dp(40), dp(32), dp(80))
         }
         if (icon != null) {
             content.addView(ImageView(context).apply { setImageDrawable(icon) }, LinearLayout.LayoutParams(dp(36), dp(36)))
