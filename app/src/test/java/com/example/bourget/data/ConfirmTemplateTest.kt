@@ -8,7 +8,7 @@ class ConfirmTemplateTest {
 
     @Test
     fun replacesEveryPlaceholder() {
-        assertEquals("YouTube, 또 볼 거니?", applyTemplate(DEFAULT_TEMPLATE, "YouTube"))
+        assertEquals("YouTube, 정말 열고 싶으신가요?", applyTemplate(DEFAULT_TEMPLATE, "YouTube"))
         assertEquals("namu.wiki? namu.wiki!", applyTemplate("{이름}? {이름}!", "namu.wiki"))
     }
 
@@ -40,7 +40,7 @@ class ConfirmTemplateTest {
 
     @Test
     fun bracesOtherThanThePlaceholderAreAnError() {
-        assertEquals(TemplateError.BAD_BRACES, templateError("{앱}, 또 볼 거니?"))
+        assertEquals(TemplateError.BAD_BRACES, templateError("{앱}, 정말 열고 싶으신가요?"))
         assertEquals(TemplateError.BAD_BRACES, templateError("{이름} }"))
         assertEquals(TemplateError.BAD_BRACES, templateError("{이름"))
     }
