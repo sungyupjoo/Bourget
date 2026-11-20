@@ -22,13 +22,14 @@ private val Context.settingsDataStore by preferencesDataStore(name = "settings")
  * changes: every user must then agree again before the service processes anything.
  * 1: app package names only (never recorded). 2: adds the browser address bar.
  * 3: may open another app; stores each rule's action and app to launch, and the popup template.
+ * 4: optional backup of the rules and popup text to the user's Google account.
  */
-const val DISCLOSURE_VERSION = 3
+const val DISCLOSURE_VERSION = 4
 
 /**
  * Stores only what the user made: app and website rules (target, on/off, action, app to launch),
- * the confirm popup template, whether the intro was seen, and which disclosure version the user
- * agreed to. Detected apps,
+ * the confirm popup template, whether the intro was seen, whether backup is on, and which
+ * disclosure version the user agreed to. Detected apps,
  * visited URLs or anything read from the screen are never persisted.
  */
 class TargetAppsStore(context: Context) {
@@ -67,6 +68,18 @@ class TargetAppsStore(context: Context) {
 
     suspend fun recordConsent() {
         dataStore.edit { it[CONSENT_VERSION] = DISCLOSURE_VERSION }
+    }
+
+    /** Forgets consent (after a restore to a new device, where the user must agree again). */
+    suspend fun clearConsent() {
+        dataStore.edit { it.remove(CONSENT_VERSION) }
+    }
+
+    /** Whether Android backup may include Bourget's data. Off unless the user turns it on. */
+    val backupEnabled: Flow<Boolean> = prefs.map { it[BACKUP_ENABLED] ?: false }
+
+    suspend fun setBackupEnabled(enabled: Boolean) {
+        dataStore.edit { it[BACKUP_ENABLED] = enabled }
     }
 
     suspend fun setIntroDone() {
@@ -134,6 +147,7 @@ class TargetAppsStore(context: Context) {
         val WEBSITE_RULES = stringPreferencesKey("website_rules")
         val CONFIRM_TEMPLATE = stringPreferencesKey("confirm_template")
         val INTRO_DONE = booleanPreferencesKey("intro_done")
+        val BACKUP_ENABLED = booleanPreferencesKey("backup_enabled")
         val CONSENT_VERSION = intPreferencesKey("consent_version")
 
         // Version 1 keys, read only to migrate.

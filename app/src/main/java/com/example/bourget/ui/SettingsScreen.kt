@@ -6,17 +6,22 @@ import android.net.Uri
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.toggleable
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
@@ -28,6 +33,8 @@ import com.example.bourget.data.NAME_PLACEHOLDER
 @Composable
 fun SettingsScreen(
     template: String,
+    backupEnabled: Boolean,
+    onBackupChange: (Boolean) -> Unit,
     onBack: () -> Unit,
     onEditTemplate: () -> Unit,
     onOpenLicenses: () -> Unit,
@@ -49,6 +56,25 @@ fun SettingsScreen(
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                 )
+            }
+            SectionHeader(stringResource(R.string.settings_section_backup), Modifier.padding(top = 32.dp))
+            // The switch sits beside the title only; the description runs the full width below.
+            Column(
+                Modifier
+                    .fillMaxWidth()
+                    .toggleable(backupEnabled, role = Role.Switch, onValueChange = onBackupChange)
+                    .padding(horizontal = ScreenMargin, vertical = 18.dp),
+                verticalArrangement = Arrangement.spacedBy(8.dp),
+            ) {
+                Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text(
+                        stringResource(R.string.settings_backup),
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.weight(1f),
+                    )
+                    Switch(checked = backupEnabled, onCheckedChange = null)
+                }
+                SecondaryText(stringResource(R.string.settings_backup_desc))
             }
             SectionHeader(stringResource(R.string.settings_section_about), Modifier.padding(top = 32.dp))
             SettingRow(stringResource(R.string.settings_licenses), onClick = onOpenLicenses)

@@ -1,5 +1,6 @@
 package com.example.bourget.ui
 
+import android.app.backup.BackupManager
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -125,6 +126,7 @@ fun MainScreen(
     val appRules by store.appRules.collectAsState(initial = null)
     val websiteRules by store.websiteRules.collectAsState(initial = null)
     val template by store.confirmTemplate.collectAsState(initial = null)
+    val backupEnabled by store.backupEnabled.collectAsState(initial = false)
 
     var stack by rememberSaveable { mutableStateOf(listOf(Route.Home.encode())) }
     var tab by rememberSaveable { mutableIntStateOf(0) }
@@ -228,6 +230,14 @@ fun MainScreen(
             )
             Route.Settings -> SettingsScreen(
                 template = template ?: return@Scaffold,
+                backupEnabled = backupEnabled,
+                onBackupChange = { on ->
+                    scope.launch {
+                        store.setBackupEnabled(on)
+                        // Lets Android schedule a backup that reflects the new setting.
+                        BackupManager(context).dataChanged()
+                    }
+                },
                 onBack = back,
                 onEditTemplate = { navigate(Route.Template) },
                 onOpenLicenses = { navigate(Route.Licenses) },
