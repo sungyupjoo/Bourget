@@ -2,10 +2,21 @@ package com.example.bourget.ui.theme
 
 import androidx.compose.ui.graphics.Color
 
-val Purple80 = Color(0xFFD0BCFF)
-val PurpleGrey80 = Color(0xFFCCC2DC)
-val Pink80 = Color(0xFFEFB8C8)
+// Warm paper and one ink color; no accent. Light then dark.
+val PaperLight = Color(0xFFFBFAF8)
+val InkLight = Color(0xFF22201D)
+val InkVariantLight = Color(0xFF67625B)
+val OnInkLight = Color(0xFFFFFFFF)
+val LineLight = Color(0xFFE4E0DA)
+val OutlineLight = Color(0xFF8E8880)
+val TonalLight = Color(0xFFE6E3DD)
+val RaisedLight = Color(0xFFFFFFFF)
 
-val Purple40 = Color(0xFF6650a4)
-val PurpleGrey40 = Color(0xFF625b71)
-val Pink40 = Color(0xFF7D5260)
+val PaperDark = Color(0xFF141312)
+val InkDark = Color(0xFFEDEAE5)
+val InkVariantDark = Color(0xFFA8A29A)
+val OnInkDark = Color(0xFF1F1D1A)
+val LineDark = Color(0xFF2E2C29)
+val OutlineDark = Color(0xFF7C766F)
+val TonalDark = Color(0xFF2B2926)
+val RaisedDark = Color(0xFF1F1E1C)
