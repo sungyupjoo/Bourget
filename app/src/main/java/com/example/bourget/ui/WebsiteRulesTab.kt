@@ -7,7 +7,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
@@ -58,7 +58,7 @@ fun WebsiteRulesTab(store: TargetAppsStore, modifier: Modifier = Modifier) {
 
     Column(modifier.fillMaxSize()) {
         Row(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp),
+            modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
@@ -86,9 +86,9 @@ fun WebsiteRulesTab(store: TargetAppsStore, modifier: Modifier = Modifier) {
             stringResource(R.string.website_notice),
             style = MaterialTheme.typography.bodySmall,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(start = 16.dp, end = 16.dp, bottom = 8.dp),
+            modifier = Modifier.padding(start = 24.dp, end = 24.dp, bottom = 8.dp),
         )
-        HorizontalDivider()
+        HorizontalDivider(Modifier.padding(horizontal = 24.dp), color = MaterialTheme.colorScheme.onSurface)
         LazyColumn(Modifier.fillMaxSize()) {
             if (rules.isEmpty()) {
                 item {
@@ -100,14 +100,15 @@ fun WebsiteRulesTab(store: TargetAppsStore, modifier: Modifier = Modifier) {
                     )
                 }
             }
-            items(rules, key = { it.domain }) { rule ->
+            itemsIndexed(rules, key = { _, rule -> rule.domain }) { i, rule ->
+                if (i > 0) HorizontalDivider(Modifier.padding(horizontal = 24.dp))
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(start = 24.dp, end = 8.dp, top = 4.dp, bottom = 4.dp),
+                        .padding(start = 24.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(rule.domain, style = MaterialTheme.typography.bodyLarge, modifier = Modifier.weight(1f))
+                    Text(rule.domain, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                     Switch(
                         checked = rule.enabled,
                         onCheckedChange = { scope.launch { store.setWebsiteEnabled(rule.domain, it) } },

@@ -15,14 +15,16 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Checkbox
-import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -31,11 +33,8 @@ import androidx.compose.material3.InputChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
-import androidx.compose.material3.Tab
-import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
-import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -51,6 +50,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.bourget.R
@@ -63,10 +63,9 @@ import kotlinx.coroutines.withContext
 
 /**
  * Shown while the accessibility service is on, with an "apps" and a "websites" tab. In the apps
- * tab the app bar, search and the selected-app chips stay fixed; only the app list scrolls. The chip row has a constant height and the list's structure
+ * tab the title, search and the selected-app chips stay fixed; only the app list scrolls. The chip row has a constant height and the list's structure
  * never changes on toggle, so the row under the user's finger never moves.
  */
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun AppPickerScreen(store: TargetAppsStore, refreshKey: Int, onOpenSettings: () -> Unit) {
     val context = LocalContext.current
@@ -91,26 +90,31 @@ fun AppPickerScreen(store: TargetAppsStore, refreshKey: Int, onOpenSettings: () 
         scope.launch { store.setSelected(app.packageName, app.packageName !in selected) }
     }
 
-    Scaffold(
-        topBar = {
-            TopAppBar(
-                title = { Text(stringResource(R.string.app_name)) },
-                actions = {
-                    IconButton(onClick = { showInfo = true }) {
-                        Icon(Icons.Outlined.Info, contentDescription = stringResource(R.string.info_open))
-                    }
-                },
-            )
-        },
-    ) { innerPadding ->
+    Scaffold { innerPadding ->
         Column(
             Modifier
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
-            TabRow(selectedTabIndex = tab) {
-                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.tab_apps)) })
-                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.tab_websites)) })
+            Row(
+                Modifier.fillMaxWidth().padding(start = 24.dp, end = 12.dp, top = 20.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Text(
+                    stringResource(R.string.app_name),
+                    style = MaterialTheme.typography.displaySmall,
+                    modifier = Modifier.weight(1f),
+                )
+                IconButton(onClick = { showInfo = true }) {
+                    Icon(Icons.Outlined.Info, contentDescription = stringResource(R.string.info_open))
+                }
+            }
+            Row(
+                Modifier.padding(horizontal = 24.dp).padding(top = 12.dp, bottom = 8.dp).selectableGroup(),
+                horizontalArrangement = Arrangement.spacedBy(20.dp),
+            ) {
+                TextTab(stringResource(R.string.tab_apps), selected = tab == 0) { tab = 0 }
+                TextTab(stringResource(R.string.tab_websites), selected = tab == 1) { tab = 1 }
             }
             if (tab == 1) {
                 WebsiteRulesTab(store, Modifier.weight(1f))
@@ -130,12 +134,12 @@ fun AppPickerScreen(store: TargetAppsStore, refreshKey: Int, onOpenSettings: () 
                 },
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp),
+                    .padding(horizontal = 24.dp, vertical = 8.dp),
             )
             // Only installed apps; selections of removed apps are pruned when the list loads.
             val selectedApps = apps.orEmpty().filter { it.packageName in selected }
             SelectedChips(selectedApps, onRemove = toggle)
-            HorizontalDivider()
+            HorizontalDivider(Modifier.padding(horizontal = 24.dp), color = MaterialTheme.colorScheme.onSurface)
             AppList(apps, selected, query.trim(), toggle, Modifier.weight(1f))
         }
     }
@@ -167,13 +171,26 @@ fun AppPickerScreen(store: TargetAppsStore, refreshKey: Int, onOpenSettings: () 
     if (showPrivacy) PrivacyPolicyDialog(onDismiss = { showPrivacy = false })
 }
 
+/** A tab drawn as large type: the selected one in ink, the other faded. */
+@Composable
+private fun TextTab(label: String, selected: Boolean, onClick: () -> Unit) {
+    Text(
+        label,
+        style = MaterialTheme.typography.headlineSmall,
+        color = if (selected) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+        modifier = Modifier
+            .selectable(selected = selected, onClick = onClick, role = Role.Tab)
+            .padding(vertical = 6.dp),
+    )
+}
+
 @Composable
 private fun SelectedChips(apps: List<LaunchableApp>, onRemove: (LaunchableApp) -> Unit) {
     Text(
         stringResource(R.string.section_selected, apps.size),
-        style = MaterialTheme.typography.titleSmall,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(horizontal = 16.dp),
+        style = MaterialTheme.typography.bodyMedium,
+        color = MaterialTheme.colorScheme.onSurfaceVariant,
+        modifier = Modifier.padding(horizontal = 24.dp),
     )
     // Constant height whether empty or not, so the list below never shifts.
     Box(
@@ -187,11 +204,11 @@ private fun SelectedChips(apps: List<LaunchableApp>, onRemove: (LaunchableApp) -
                 stringResource(R.string.section_selected_empty),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = 16.dp),
+                modifier = Modifier.padding(horizontal = 24.dp),
             )
         } else {
             LazyRow(
-                contentPadding = PaddingValues(horizontal = 16.dp),
+                contentPadding = PaddingValues(horizontal = 24.dp),
                 horizontalArrangement = Arrangement.spacedBy(8.dp),
             ) {
                 items(apps, key = { it.packageName }) { app ->
@@ -235,7 +252,8 @@ private fun AppList(
     val visible = if (query.isEmpty()) apps else apps.filter { it.label.contains(query, ignoreCase = true) }
     LazyColumn(modifier = modifier.fillMaxSize()) {
         if (visible.isEmpty()) item { ListMessage(stringResource(R.string.apps_empty)) }
-        items(visible, key = { it.packageName }) { app ->
+        itemsIndexed(visible, key = { _, app -> app.packageName }) { i, app ->
+            if (i > 0) HorizontalDivider(Modifier.padding(horizontal = 24.dp))
             AppRow(app, checked = app.packageName in selected) { onToggle(app) }
         }
     }
@@ -247,12 +265,12 @@ private fun AppRow(app: LaunchableApp, checked: Boolean, onToggle: () -> Unit) {
         modifier = Modifier
             .fillMaxWidth()
             .clickable(onClick = onToggle)
-            .padding(horizontal = 24.dp, vertical = 8.dp),
+            .padding(start = 24.dp, end = 12.dp, top = 10.dp, bottom = 10.dp),
         verticalAlignment = Alignment.CenterVertically,
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        horizontalArrangement = Arrangement.spacedBy(14.dp),
     ) {
-        Image(bitmap = app.icon, contentDescription = null, modifier = Modifier.size(40.dp))
-        Text(app.label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.bodyLarge)
+        Image(bitmap = app.icon, contentDescription = null, modifier = Modifier.size(32.dp))
+        Text(app.label, modifier = Modifier.weight(1f), style = MaterialTheme.typography.titleMedium)
         // Row handles the click so the whole line is one touch target.
         Checkbox(checked = checked, onCheckedChange = null)
     }
