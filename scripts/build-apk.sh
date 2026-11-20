@@ -2,8 +2,8 @@
 # Builds Bourget's APK and copies it to dist/ named with the version and build type.
 # Usage: scripts/build-apk.sh [debug|release]   (default: debug)
 #
-# Release builds are unsigned until a signing config is added to app/build.gradle.kts, so they
-# cannot be installed as they are; debug builds can.
+# Release builds are signed when the BOURGET_RELEASE_* properties are set (see
+# app/build.gradle.kts); without them they come out unsigned (-unsigned) and cannot be installed.
 set -euo pipefail
 cd "$(dirname "$0")/.."
 

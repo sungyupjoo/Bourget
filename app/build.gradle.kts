@@ -18,8 +18,27 @@ android {
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
 
+    // Release signing. The keystore and passwords never live in this repository: they come from
+    // ~/.gradle/gradle.properties or environment variables (BOURGET_RELEASE_STORE_FILE,
+    // BOURGET_RELEASE_STORE_PASSWORD, BOURGET_RELEASE_KEY_ALIAS, BOURGET_RELEASE_KEY_PASSWORD).
+    // Without them, release builds are left unsigned.
+    fun signingValue(name: String): String? =
+        providers.gradleProperty(name).orElse(providers.environmentVariable(name)).orNull
+    val releaseStoreFile = signingValue("BOURGET_RELEASE_STORE_FILE")
+    signingConfigs {
+        if (releaseStoreFile != null) {
+            create("release") {
+                storeFile = file(releaseStoreFile)
+                storePassword = signingValue("BOURGET_RELEASE_STORE_PASSWORD")
+                keyAlias = signingValue("BOURGET_RELEASE_KEY_ALIAS")
+                keyPassword = signingValue("BOURGET_RELEASE_KEY_PASSWORD")
+            }
+        }
+    }
+
     buildTypes {
         release {
+            signingConfig = signingConfigs.findByName("release")
             isMinifyEnabled = false
             proguardFiles(
                 getDefaultProguardFile("proguard-android-optimize.txt"),
