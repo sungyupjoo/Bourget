@@ -96,7 +96,7 @@ fun PrivacyPolicyScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
 
 /** A string resource with its <b> tags kept as bold, which stringResource drops. */
 @Composable
-private fun boldStringResource(id: Int): AnnotatedString {
+fun boldStringResource(id: Int): AnnotatedString {
     val text = LocalContext.current.resources.getText(id)
     return buildAnnotatedString {
         append(text.toString())

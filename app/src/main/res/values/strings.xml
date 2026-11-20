@@ -130,6 +130,7 @@
     <string name="reconsent_body">기능 추가로 안내 내용이 변경되었습니다. 다시 동의하기 전까지 서비스가 중지됩니다.</string>
     <string name="service_off_title">서비스 꺼짐</string>
     <string name="service_off_body">접근성 설정에서 Bourget가 꺼져 있습니다. 서비스를 켜면 저장된 규칙이 적용됩니다.</string>
+    <string name="settings_path">접근성 설정에서 <b>설치된 앱</b>(또는 다운로드한 앱) → <b>Bourget 앱 실행 알림</b>을 눌러 켜세요.</string>
     <string name="service_off_rules">저장된 규칙: %1$d개</string>
     <string name="review_disclosure">안내 다시 보기</string>
     <string name="declined_title">동의하지 않음</string>

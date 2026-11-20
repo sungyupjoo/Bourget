@@ -81,6 +81,11 @@ fun ConsentScreen(
                     ScreenTitle(stringResource(R.string.service_off_title))
                     InkRule(Modifier.padding(horizontal = ScreenMargin))
                     Body(stringResource(R.string.service_off_body))
+                    Text(
+                        boldStringResource(R.string.settings_path),
+                        style = MaterialTheme.typography.bodyLarge,
+                        modifier = Modifier.padding(horizontal = ScreenMargin),
+                    )
                     SecondaryBody(stringResource(R.string.service_off_rules, ruleCount), Modifier.padding(horizontal = ScreenMargin))
                     UnderlineButton(
                         stringResource(R.string.review_disclosure),
@@ -103,6 +108,14 @@ fun ConsentScreen(
             when (state) {
                 ConsentState.FIRST, ConsentState.RECONSENT -> {
                     // With the service already on there is nothing to turn on in settings.
+                    if (!serviceEnabled) {
+                        Text(
+                            boldStringResource(R.string.settings_path),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.padding(bottom = 8.dp),
+                        )
+                    }
                     PrimaryButton(
                         stringResource(if (serviceEnabled) R.string.consent_agree_continue else R.string.main_open_settings),
                         onClick = onAgree,
