@@ -244,7 +244,7 @@ private fun AppList(
 }
 
 @Composable
-private fun CheckRow(app: LaunchableApp, checked: Boolean, onToggle: () -> Unit) {
+fun CheckRow(app: LaunchableApp, checked: Boolean, onToggle: () -> Unit) {
     Row(
         modifier = Modifier
             .fillMaxWidth()

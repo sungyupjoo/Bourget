@@ -9,14 +9,11 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -26,7 +23,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -66,6 +62,7 @@ private sealed interface Route {
     data object Settings : Route
     data object Template : Route
     data object Licenses : Route
+    data object Privacy : Route
 }
 
 private fun Route.encode(): String = when (this) {
@@ -74,6 +71,7 @@ private fun Route.encode(): String = when (this) {
     Route.Settings -> "settings"
     Route.Template -> "template"
     Route.Licenses -> "licenses"
+    Route.Privacy -> "privacy"
     is Route.Detail -> "detail:${kind.name}:$target"
     is Route.LaunchPicker -> "launch:${kind.name}:$target"
 }
@@ -87,6 +85,7 @@ private fun decodeRoute(text: String): Route {
         parts[0] == "settings" -> Route.Settings
         parts[0] == "template" -> Route.Template
         parts[0] == "licenses" -> Route.Licenses
+        parts[0] == "privacy" -> Route.Privacy
         kind == null || target == null -> Route.Home
         parts[0] == "detail" -> Route.Detail(kind, target)
         parts[0] == "launch" -> Route.LaunchPicker(kind, target)
@@ -172,6 +171,7 @@ fun MainScreen(
                 onAddApp = { navigate(Route.AppPicker) },
                 onOpenRule = { kind, target -> navigate(Route.Detail(kind, target)) },
                 onOpenSettings = { navigate(Route.Settings) },
+                onOpenPrivacy = { navigate(Route.Privacy) },
                 onOpenAccessibilitySettings = onOpenAccessibilitySettings,
                 showSnackbar = showSnackbar,
                 modifier = modifier,
@@ -247,6 +247,7 @@ fun MainScreen(
                 modifier = modifier,
             )
             Route.Licenses -> LicensesScreen(onBack = back, modifier = modifier)
+            Route.Privacy -> PrivacyPolicyScreen(onBack = back, modifier = modifier)
         }
     }
 }
@@ -262,12 +263,12 @@ private fun HomeScreen(
     onAddApp: () -> Unit,
     onOpenRule: (RuleKind, String) -> Unit,
     onOpenSettings: () -> Unit,
+    onOpenPrivacy: () -> Unit,
     onOpenAccessibilitySettings: () -> Unit,
     showSnackbar: ShowSnackbar,
     modifier: Modifier = Modifier,
 ) {
     var showInfo by rememberSaveable { mutableStateOf(false) }
-    var showPrivacy by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     Column(modifier) {
@@ -311,30 +312,12 @@ private fun HomeScreen(
     }
 
     if (showInfo) {
-        AlertDialog(
-            onDismissRequest = { showInfo = false },
-            title = { Text(stringResource(R.string.main_disclosure_title)) },
-            text = {
-                Column(Modifier.verticalScroll(rememberScrollState())) {
-                    Text(stringResource(R.string.main_disclosure_body))
-                    TextButton(onClick = {
-                        showInfo = false
-                        showPrivacy = true
-                    }) { Text(stringResource(R.string.privacy_policy_open)) }
-                }
-            },
-            confirmButton = {
-                TextButton(onClick = {
-                    showInfo = false
-                    onOpenAccessibilitySettings()
-                }) { Text(stringResource(R.string.info_open_settings)) }
-            },
-            dismissButton = {
-                TextButton(onClick = { showInfo = false }) { Text(stringResource(R.string.info_close)) }
-            },
+        InfoDialog(
+            onDismiss = { showInfo = false },
+            onOpenPrivacy = onOpenPrivacy,
+            onOpenSettings = onOpenAccessibilitySettings,
         )
     }
-    if (showPrivacy) PrivacyPolicyDialog(onDismiss = { showPrivacy = false })
 }
 
 /** A tab drawn as large type: the selected one in ink, the other in the inactive tab color. */

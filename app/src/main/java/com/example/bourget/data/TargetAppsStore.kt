@@ -21,8 +21,9 @@ private val Context.settingsDataStore by preferencesDataStore(name = "settings")
  * Version of the in-app disclosure (what the service reads and stores). Bump it whenever that
  * changes: every user must then agree again before the service processes anything.
  * 1: app package names only (never recorded). 2: adds the browser address bar.
+ * 3: may open another app; stores each rule's action and app to launch, and the popup template.
  */
-const val DISCLOSURE_VERSION = 2
+const val DISCLOSURE_VERSION = 3
 
 /**
  * Stores only what the user made: app and website rules (target, on/off, action, app to launch),
@@ -50,6 +51,9 @@ class TargetAppsStore(context: Context) {
     suspend fun setConfirmTemplate(template: String) {
         dataStore.edit { it[CONFIRM_TEMPLATE] = template }
     }
+
+    /** The disclosure version the user last agreed to; 0 if never. */
+    val consentVersion: Flow<Int> = prefs.map { it[CONSENT_VERSION] ?: 0 }
 
     /** True once the user agreed to the current [DISCLOSURE_VERSION] in the app. */
     val consentedToCurrentDisclosure: Flow<Boolean> =

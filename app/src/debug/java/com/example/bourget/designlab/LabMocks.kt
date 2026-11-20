@@ -362,7 +362,10 @@ fun ConsentMock() {
     val style = LocalLabStyle.current
     val p = style.p
     val title = stringResource(R.string.main_disclosure_title)
-    val body = stringResource(R.string.main_disclosure_body)
+    val body = listOf(
+        R.string.disclosure_intro, R.string.disclosure_reads_title, R.string.disclosure_reads,
+        R.string.disclosure_never_title, R.string.disclosure_never, R.string.disclosure_outro,
+    ).map { stringResource(it) }.joinToString("\n\n")
     Column(Modifier.fillMaxSize()) {
         Column(
             Modifier.weight(1f).verticalScroll(rememberScrollState())
