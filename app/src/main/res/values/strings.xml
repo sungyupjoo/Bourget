@@ -17,22 +17,50 @@
     <string name="info_open_settings">접근성 설정 열기</string>
     <string name="info_close">닫기</string>
 
-    <string name="apps_search">앱 검색</string>
-    <string name="apps_search_clear">검색어 지우기</string>
-    <string name="apps_loading">앱 목록을 불러오는 중…</string>
-    <string name="apps_empty">검색 결과가 없습니다.</string>
-    <string name="section_selected">선택한 앱 (%1$d)</string>
-    <string name="section_selected_empty">아래 목록에서 확인 창을 띄울 앱을 고르세요.</string>
-    <string name="chip_remove">%1$s 선택 해제</string>
+    <string name="back">뒤로</string>
+    <string name="undo">실행 취소</string>
 
     <string name="tab_apps">앱</string>
     <string name="tab_websites">웹사이트</string>
-    <string name="website_input_hint">예: namu.wiki</string>
-    <string name="website_input_invalid">도메인 형식이 올바르지 않습니다.</string>
+    <string name="rules_count">규칙 %1$d개</string>
+    <string name="app_add">앱 추가</string>
+    <string name="rule_summary_confirm">확인 창</string>
+    <string name="rule_summary_launch">→ %1$s 실행</string>
+    <string name="rule_summary_off">꺼짐 · %1$s</string>
+    <string name="rule_switch">%1$s 규칙 사용</string>
+    <string name="rules_empty_title">규칙 없음</string>
+    <string name="rules_empty_apps">앱을 추가하면 해당 앱이 열릴 때 확인 창이 표시됩니다.</string>
+    <string name="rules_empty_websites">웹사이트 주소를 추가하면 해당 사이트에 접속할 때 확인 창이 표시됩니다.</string>
+
+    <string name="website_input_label">웹사이트 주소</string>
+    <string name="website_input_hint">예시 namu.wiki</string>
     <string name="website_add">추가</string>
-    <string name="website_notice">하위 도메인도 함께 적용됩니다.</string>
-    <string name="website_empty">추가한 웹사이트가 없습니다.</string>
+    <string name="website_notice">하위 도메인 포함. Chrome, 삼성 인터넷에서만 동작합니다.</string>
+    <string name="website_notice_more">자세히</string>
+    <string name="website_notice_less">접기</string>
+    <string name="website_notice_detail">주소창의 주소를 확인할 수 없는 경우(주소 입력 중, 주소창이 숨겨진 경우 등)와 그 외 브라우저에서는 확인 창이 표시되지 않습니다.</string>
+    <string name="website_error_empty">주소를 입력하세요.</string>
+    <string name="website_error_invalid">주소 형식이 올바르지 않습니다. 예: namu.wiki</string>
+    <string name="website_error_duplicate">이미 등록된 사이트입니다.</string>
+    <string name="website_added">사이트 추가됨</string>
     <string name="website_delete">%1$s 규칙 삭제</string>
+
+    <string name="picker_title">앱 선택</string>
+    <string name="picker_done">완료</string>
+    <string name="apps_search">앱 검색</string>
+    <string name="apps_search_clear">검색어 지우기</string>
+    <string name="apps_loading">설치된 앱 확인 중…</string>
+    <string name="chips_count">선택한 앱 %1$d</string>
+    <string name="chips_empty">선택한 앱 없음</string>
+    <string name="chip_remove">%1$s 선택 해제</string>
+    <string name="section_recommended">추천</string>
+    <string name="section_all_apps">모든 앱</string>
+    <string name="select_all">모두 선택</string>
+    <string name="deselect_all">모두 해제</string>
+    <string name="search_empty_title">검색 결과 없음</string>
+    <string name="search_empty_body">앱 이름 또는 패키지 이름으로 검색하세요.</string>
+    <string name="rule_released">%1$s 규칙 해제됨</string>
+    <string name="recommended_released">추천 앱 모두 해제됨</string>
 
     <string name="consent_required_note">계속 사용하려면 아래 내용을 확인하고 동의해 주세요. 동의하기 전에는 접근성 서비스가 켜져 있어도 Bourget이 아무 정보도 확인하지 않습니다.</string>
     <string name="consent_agree_continue">동의하고 계속하기</string>

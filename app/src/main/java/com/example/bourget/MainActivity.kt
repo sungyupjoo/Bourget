@@ -19,7 +19,7 @@ import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
 import com.example.bourget.data.TargetAppsStore
 import com.example.bourget.service.BourgetAccessibilityService
-import com.example.bourget.ui.AppPickerScreen
+import com.example.bourget.ui.MainScreen
 import com.example.bourget.ui.SetupScreen
 import com.example.bourget.ui.theme.BourgetTheme
 import kotlinx.coroutines.launch
@@ -41,8 +41,13 @@ class MainActivity : ComponentActivity() {
                 val consented by store.consentedToCurrentDisclosure.collectAsState(initial = null)
                 when {
                     consented == null -> Unit
-                    consented == true && serviceEnabled ->
-                        AppPickerScreen(store = store, refreshKey = resumeCount, onOpenSettings = openSettings)
+                    consented == true && serviceEnabled -> MainScreen(
+                        store = store,
+                        refreshKey = resumeCount,
+                        onOpenAccessibilitySettings = openSettings,
+                        message = null,
+                        onMessageShown = {},
+                    )
                     else -> Scaffold(modifier = Modifier.fillMaxSize()) { innerPadding ->
                         SetupScreen(
                             consented = consented == true,
