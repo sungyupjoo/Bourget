@@ -2,15 +2,19 @@ package com.example.bourget.ui
 
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.selection.toggleable
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Switch
@@ -35,7 +39,7 @@ import com.example.bourget.data.applyTemplate
 /**
  * One rule: on/off, what happens when its app or site opens, and deletion. Changes are saved at
  * once. Choosing "다른 앱 실행" without an app to launch goes straight to the launch picker; the
- * rule stays on "확인 창 표시" until an app is picked.
+ * rule stays on "확인 창 표시" until an app is picked. "규칙 삭제" sits at the right end of the icon row.
  */
 @Composable
 fun RuleDetailScreen(
@@ -62,7 +66,15 @@ fun RuleDetailScreen(
                 Modifier.padding(horizontal = ScreenMargin).padding(top = 8.dp, bottom = 24.dp),
                 verticalArrangement = Arrangement.spacedBy(4.dp),
             ) {
-                RuleIcon(kind, rule.target, apps, 48.dp, Modifier.padding(bottom = 12.dp))
+                Row(Modifier.fillMaxWidth().padding(bottom = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+                    RuleIcon(kind, rule.target, apps, 48.dp)
+                    Spacer(Modifier.weight(1f))
+                    UnderlineButton(
+                        stringResource(R.string.rule_delete),
+                        onClick = { confirmDelete = true },
+                        color = MaterialTheme.colorScheme.error,
+                    )
+                }
                 Text(name, style = MaterialTheme.typography.headlineSmall)
                 Text(
                     if (kind == RuleKind.APP) rule.target else stringResource(R.string.rule_subdomains),
@@ -92,7 +104,15 @@ fun RuleDetailScreen(
                     onClick = { onUpdate { it.copy(action = RuleAction.CONFIRM, launchPackage = null) } },
                 ) {
                     Text(applyTemplate(template, name), style = MaterialTheme.typography.titleMedium)
-                    UnderlineButton(stringResource(R.string.template_change), onClick = onEditTemplate)
+                    // Ink with light text and slightly rounded corners: set apart from the plain
+                    // underlined buttons, since it leads to another screen.
+                    Button(
+                        onClick = onEditTemplate,
+                        shape = RoundedCornerShape(8.dp),
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    ) {
+                        Text(stringResource(R.string.template_change), style = MaterialTheme.typography.labelLarge)
+                    }
                 }
                 RowRule()
                 ActionOption(
@@ -119,13 +139,6 @@ fun RuleDetailScreen(
                     }
                 }
             }
-            RowRule()
-            UnderlineButton(
-                stringResource(R.string.rule_delete),
-                onClick = { confirmDelete = true },
-                color = MaterialTheme.colorScheme.error,
-                modifier = Modifier.padding(horizontal = 12.dp, vertical = 24.dp),
-            )
         }
     }
 
