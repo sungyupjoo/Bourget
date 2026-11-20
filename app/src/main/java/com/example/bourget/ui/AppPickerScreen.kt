@@ -29,6 +29,8 @@ import androidx.compose.material3.InputChipDefaults
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Tab
+import androidx.compose.material3.TabRow
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
@@ -36,6 +38,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -57,8 +60,8 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 
 /**
- * Shown while the accessibility service is on. App bar, search and the selected-app chips stay
- * fixed; only the app list scrolls. The chip row has a constant height and the list's structure
+ * Shown while the accessibility service is on, with an "apps" and a "websites" tab. In the apps
+ * tab the app bar, search and the selected-app chips stay fixed; only the app list scrolls. The chip row has a constant height and the list's structure
  * never changes on toggle, so the row under the user's finger never moves.
  */
 @OptIn(ExperimentalMaterial3Api::class)
@@ -79,6 +82,7 @@ fun AppPickerScreen(store: TargetAppsStore, refreshKey: Int, onOpenSettings: () 
     val selected by store.targetPackages.collectAsState(initial = emptySet())
     var query by rememberSaveable { mutableStateOf("") }
     var showInfo by rememberSaveable { mutableStateOf(false) }
+    var tab by rememberSaveable { mutableIntStateOf(0) }
     val scope = rememberCoroutineScope()
     val toggle: (LaunchableApp) -> Unit = { app ->
         scope.launch { store.setSelected(app.packageName, app.packageName !in selected) }
@@ -101,6 +105,14 @@ fun AppPickerScreen(store: TargetAppsStore, refreshKey: Int, onOpenSettings: () 
                 .padding(innerPadding)
                 .fillMaxSize()
         ) {
+            TabRow(selectedTabIndex = tab) {
+                Tab(selected = tab == 0, onClick = { tab = 0 }, text = { Text(stringResource(R.string.tab_apps)) })
+                Tab(selected = tab == 1, onClick = { tab = 1 }, text = { Text(stringResource(R.string.tab_websites)) })
+            }
+            if (tab == 1) {
+                WebsiteRulesTab(store, Modifier.weight(1f))
+                return@Column
+            }
             OutlinedTextField(
                 value = query,
                 onValueChange = { query = it },
@@ -117,7 +129,7 @@ fun AppPickerScreen(store: TargetAppsStore, refreshKey: Int, onOpenSettings: () 
                     .fillMaxWidth()
                     .padding(horizontal = 16.dp, vertical = 8.dp),
             )
-            // Only installed apps; packages of uninstalled apps stay stored but are not shown.
+            // Only installed apps; selections of removed apps are pruned when the list loads.
             val selectedApps = apps.orEmpty().filter { it.packageName in selected }
             SelectedChips(selectedApps, onRemove = toggle)
             HorizontalDivider()
