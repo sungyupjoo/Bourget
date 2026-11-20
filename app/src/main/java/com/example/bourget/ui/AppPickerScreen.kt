@@ -56,6 +56,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.bourget.R
 import com.example.bourget.data.LaunchableApp
+import com.example.bourget.data.RuleKind
 import com.example.bourget.data.TargetAppsStore
 import com.example.bourget.data.loadLaunchableApps
 import com.example.bourget.ui.theme.LocalInactiveTab
@@ -82,14 +83,18 @@ fun AppPickerScreen(store: TargetAppsStore, refreshKey: Int, onOpenSettings: () 
         // query, never as "nothing installed", so it cannot wipe the whole selection.
         if (loaded.isNotEmpty()) store.retainOnly(loaded.map { it.packageName }.toSet())
     }
-    val selected by store.targetPackages.collectAsState(initial = emptySet())
+    val rules by store.appRules.collectAsState(initial = emptyList())
+    val selected = rules.map { it.target }.toSet()
     var query by rememberSaveable { mutableStateOf("") }
     var showInfo by rememberSaveable { mutableStateOf(false) }
     var showPrivacy by rememberSaveable { mutableStateOf(false) }
     var tab by rememberSaveable { mutableIntStateOf(0) }
     val scope = rememberCoroutineScope()
     val toggle: (LaunchableApp) -> Unit = { app ->
-        scope.launch { store.setSelected(app.packageName, app.packageName !in selected) }
+        scope.launch {
+            if (app.packageName in selected) store.removeRule(RuleKind.APP, app.packageName)
+            else store.addRule(RuleKind.APP, app.packageName)
+        }
     }
 
     Scaffold { innerPadding ->

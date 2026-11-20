@@ -96,7 +96,7 @@ private fun DesignLab(store: TargetAppsStore) {
 
     LaunchedEffect(Unit) {
         val apps = withContext(Dispatchers.IO) { loadLaunchableApps(context, iconPx) }
-        rules = buildMockRules(apps, store.targetPackages.first())
+        rules = buildMockRules(apps, store.appRules.first().map { it.target }.toSet())
     }
 
     // The lab's own controls use plain Material 3 so they never look like part of a concept.

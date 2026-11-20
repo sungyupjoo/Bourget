@@ -1,10 +1,13 @@
 package com.example.bourget.data
 
 import android.content.Context
+import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
+import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
@@ -14,8 +17,6 @@ import java.io.IOException
 
 private val Context.settingsDataStore by preferencesDataStore(name = "settings")
 
-data class WebsiteRule(val domain: String, val enabled: Boolean)
-
 /**
  * Version of the in-app disclosure (what the service reads and stores). Bump it whenever that
  * changes: every user must then agree again before the service processes anything.
@@ -24,9 +25,9 @@ data class WebsiteRule(val domain: String, val enabled: Boolean)
 const val DISCLOSURE_VERSION = 2
 
 /**
- * Stores only the user's rules (selected app package names, website rule domains) and which
- * disclosure version the user agreed to. Visited URLs or anything read from the screen are
- * never persisted.
+ * Stores only what the user made: app and website rules (target, on/off, action, app to launch),
+ * whether the intro was seen, and which disclosure version the user agreed to. Detected apps,
+ * visited URLs or anything read from the screen are never persisted.
  */
 class TargetAppsStore(context: Context) {
 
@@ -35,63 +36,95 @@ class TargetAppsStore(context: Context) {
     private val prefs: Flow<Preferences> = dataStore.data
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
 
-    val targetPackages: Flow<Set<String>> = prefs.map { it[TARGET_PACKAGES] ?: emptySet() }
+    /** Rules in screen order (newest first). Reads the version 1 keys until they are migrated. */
+    fun rules(kind: RuleKind): Flow<List<Rule>> = prefs.map { it.rules(kind) }
+
+    val appRules: Flow<List<Rule>> = rules(RuleKind.APP)
+    val websiteRules: Flow<List<Rule>> = rules(RuleKind.WEBSITE)
 
     /** True once the user agreed to the current [DISCLOSURE_VERSION] in the app. */
     val consentedToCurrentDisclosure: Flow<Boolean> =
         prefs.map { (it[CONSENT_VERSION] ?: 0) >= DISCLOSURE_VERSION }
 
+    /** True once the intro and recommended apps were seen, or the user already had rules. */
+    val introDone: Flow<Boolean> = prefs.map { p ->
+        p[INTRO_DONE] ?: (p.rules(RuleKind.APP).isNotEmpty() || p.rules(RuleKind.WEBSITE).isNotEmpty() ||
+            (p[CONSENT_VERSION] ?: 0) > 0)
+    }
+
     suspend fun recordConsent() {
         dataStore.edit { it[CONSENT_VERSION] = DISCLOSURE_VERSION }
     }
 
-    val websiteRules: Flow<List<WebsiteRule>> = prefs.map { p ->
-        val disabled = p[WEBSITE_DISABLED] ?: emptySet()
-        (p[WEBSITE_DOMAINS] ?: emptySet()).sorted().map { WebsiteRule(it, it !in disabled) }
+    suspend fun setIntroDone() {
+        dataStore.edit { it[INTRO_DONE] = true }
     }
 
-    suspend fun setSelected(packageName: String, selected: Boolean) {
+    /** Moves rules from the version 1 keys to the new ones and deletes the old keys. */
+    suspend fun migrate() {
+        dataStore.edit { it.migrate() }
+    }
+
+    suspend fun editRules(kind: RuleKind, transform: (List<Rule>) -> List<Rule>) {
         dataStore.edit { prefs ->
-            val current = prefs[TARGET_PACKAGES] ?: emptySet()
-            prefs[TARGET_PACKAGES] = if (selected) current + packageName else current - packageName
+            prefs.migrate()
+            prefs[kind.key] = encodeRules(transform(prefs.rules(kind)))
         }
     }
 
-    /** Drops selected packages that are no longer in [installed] (uninstalled or disabled apps). */
+    /** Adds an enabled "confirm" rule for [target] at the top, unless it already has one. */
+    suspend fun addRule(kind: RuleKind, target: String) = editRules(kind) { it.withAdded(Rule(target)) }
+
+    suspend fun removeRule(kind: RuleKind, target: String) = editRules(kind) { it.without(target) }
+
+    suspend fun updateRule(kind: RuleKind, target: String, transform: (Rule) -> Rule) =
+        editRules(kind) { it.updated(target, transform) }
+
+    /**
+     * Forgets app rules for apps that are gone and launch targets that are gone (see
+     * [retainInstalled]). Callers pass an empty set only if the app query really returned nothing.
+     */
     suspend fun retainOnly(installed: Set<String>) {
         dataStore.edit { prefs ->
-            val current = prefs[TARGET_PACKAGES] ?: return@edit
-            val kept = current intersect installed
-            if (kept != current) prefs[TARGET_PACKAGES] = kept
+            prefs.migrate()
+            for (kind in RuleKind.entries) {
+                val current = prefs.rules(kind)
+                val kept = current.retainInstalled(kind, installed)
+                if (kept != current) prefs[kind.key] = encodeRules(kept)
+            }
         }
     }
 
-    /** Adds an enabled rule for [domain] (already normalized). */
-    suspend fun addWebsite(domain: String) {
-        dataStore.edit { prefs ->
-            prefs[WEBSITE_DOMAINS] = (prefs[WEBSITE_DOMAINS] ?: emptySet()) + domain
-            prefs[WEBSITE_DISABLED] = (prefs[WEBSITE_DISABLED] ?: emptySet()) - domain
-        }
-    }
+    private val RuleKind.key
+        get() = if (this == RuleKind.APP) APP_RULES else WEBSITE_RULES
 
-    suspend fun removeWebsite(domain: String) {
-        dataStore.edit { prefs ->
-            prefs[WEBSITE_DOMAINS] = (prefs[WEBSITE_DOMAINS] ?: emptySet()) - domain
-            prefs[WEBSITE_DISABLED] = (prefs[WEBSITE_DISABLED] ?: emptySet()) - domain
+    private fun Preferences.rules(kind: RuleKind): List<Rule> = this[kind.key]?.let(::decodeRules)
+        ?: when (kind) {
+            RuleKind.APP -> legacyAppRules(this[TARGET_PACKAGES])
+            RuleKind.WEBSITE -> legacyWebsiteRules(this[WEBSITE_DOMAINS], this[WEBSITE_DISABLED])
         }
-    }
 
-    suspend fun setWebsiteEnabled(domain: String, enabled: Boolean) {
-        dataStore.edit { prefs ->
-            val disabled = prefs[WEBSITE_DISABLED] ?: emptySet()
-            prefs[WEBSITE_DISABLED] = if (enabled) disabled - domain else disabled + domain
+    private fun MutablePreferences.migrate() {
+        if (TARGET_PACKAGES in this || WEBSITE_DOMAINS in this || WEBSITE_DISABLED in this) {
+            // Users from version 1 already set up their rules, so they skip the intro.
+            if (this[INTRO_DONE] == null) this[INTRO_DONE] = true
         }
+        if (this[APP_RULES] == null) this[APP_RULES] = encodeRules(rules(RuleKind.APP))
+        if (this[WEBSITE_RULES] == null) this[WEBSITE_RULES] = encodeRules(rules(RuleKind.WEBSITE))
+        remove(TARGET_PACKAGES)
+        remove(WEBSITE_DOMAINS)
+        remove(WEBSITE_DISABLED)
     }
 
     private companion object {
+        val APP_RULES = stringPreferencesKey("app_rules")
+        val WEBSITE_RULES = stringPreferencesKey("website_rules")
+        val INTRO_DONE = booleanPreferencesKey("intro_done")
+        val CONSENT_VERSION = intPreferencesKey("consent_version")
+
+        // Version 1 keys, read only to migrate.
         val TARGET_PACKAGES = stringSetPreferencesKey("target_packages")
         val WEBSITE_DOMAINS = stringSetPreferencesKey("website_domains")
         val WEBSITE_DISABLED = stringSetPreferencesKey("website_disabled")
-        val CONSENT_VERSION = intPreferencesKey("consent_version")
     }
 }

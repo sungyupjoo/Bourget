@@ -33,6 +33,7 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import com.example.bourget.R
+import com.example.bourget.data.RuleKind
 import com.example.bourget.data.TargetAppsStore
 import com.example.bourget.detection.normalizeDomain
 import kotlinx.coroutines.launch
@@ -49,7 +50,7 @@ fun WebsiteRulesTab(store: TargetAppsStore, modifier: Modifier = Modifier) {
         if (domain == null) {
             invalid = true
         } else {
-            scope.launch { store.addWebsite(domain) }
+            scope.launch { store.addRule(RuleKind.WEBSITE, domain) }
             input = ""
             invalid = false
         }
@@ -94,7 +95,7 @@ fun WebsiteRulesTab(store: TargetAppsStore, modifier: Modifier = Modifier) {
                     )
                 }
             }
-            itemsIndexed(rules, key = { _, rule -> rule.domain }) { i, rule ->
+            itemsIndexed(rules, key = { _, rule -> rule.target }) { i, rule ->
                 if (i > 0) HorizontalDivider(Modifier.padding(horizontal = 24.dp))
                 Row(
                     modifier = Modifier
@@ -102,15 +103,15 @@ fun WebsiteRulesTab(store: TargetAppsStore, modifier: Modifier = Modifier) {
                         .padding(start = 24.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
-                    Text(rule.domain, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
+                    Text(rule.target, style = MaterialTheme.typography.titleMedium, modifier = Modifier.weight(1f))
                     Switch(
                         checked = rule.enabled,
-                        onCheckedChange = { scope.launch { store.setWebsiteEnabled(rule.domain, it) } },
+                        onCheckedChange = { scope.launch { store.updateRule(RuleKind.WEBSITE, rule.target) { r -> r.copy(enabled = it) } } },
                     )
-                    IconButton(onClick = { scope.launch { store.removeWebsite(rule.domain) } }) {
+                    IconButton(onClick = { scope.launch { store.removeRule(RuleKind.WEBSITE, rule.target) } }) {
                         Icon(
                             Icons.Default.Delete,
-                            contentDescription = stringResource(R.string.website_delete, rule.domain),
+                            contentDescription = stringResource(R.string.website_delete, rule.target),
                         )
                     }
                 }

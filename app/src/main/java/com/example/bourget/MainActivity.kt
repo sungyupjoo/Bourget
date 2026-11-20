@@ -33,6 +33,7 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         val store = TargetAppsStore(this)
+        lifecycleScope.launch { store.migrate() }
         val openSettings = { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) }
         setContent {
             BourgetTheme {

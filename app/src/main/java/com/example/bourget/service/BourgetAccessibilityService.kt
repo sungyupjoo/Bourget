@@ -62,10 +62,15 @@ class BourgetAccessibilityService : AccessibilityService() {
                     }
                 }
             }
-            launch { store.targetPackages.collect { appDetector.targetPackages = it } }
+            launch { store.migrate() }
+            launch {
+                store.appRules.collect { rules ->
+                    appDetector.targetPackages = rules.filter { it.enabled }.map { it.target }.toSet()
+                }
+            }
             launch {
                 store.websiteRules.collect { rules ->
-                    webDetector.targetPackages = rules.filter { it.enabled }.map { it.domain }.toSet()
+                    webDetector.targetPackages = rules.filter { it.enabled }.map { it.target }.toSet()
                 }
             }
         }
