@@ -58,14 +58,14 @@
     <string name="chips_count">선택한 앱 %1$d</string>
     <string name="chips_empty">선택한 앱 없음</string>
     <string name="chip_remove">%1$s 선택 해제</string>
-    <string name="section_recommended">추천</string>
+    <string name="section_recommended">자주 지정되는 앱</string>
     <string name="section_all_apps">모든 앱</string>
     <string name="select_all">모두 선택</string>
     <string name="deselect_all">모두 해제</string>
     <string name="search_empty_title">검색 결과 없음</string>
     <string name="search_empty_body">앱 이름 또는 패키지 이름으로 검색하세요.</string>
     <string name="rule_released">%1$s 규칙 해제됨</string>
-    <string name="recommended_released">추천 앱 모두 해제됨</string>
+    <string name="recommended_released">자주 지정되는 앱 모두 해제됨</string>
 
     <string name="rule_enabled">규칙 사용</string>
     <string name="rule_section_app">앱 실행 시</string>
@@ -143,9 +143,9 @@
     <string name="intro_principle_open_source">오픈소스(코드 전부 공개됨)</string>
     <string name="intro_principle_free">무료, 광고 없음</string>
     <string name="intro_start">시작</string>
-    <string name="recommend_title">추천 앱</string>
+    <string name="recommend_title">자주 지정되는 앱</string>
     <string name="recommend_description">이 기기에 설치된 앱 중 사용 시간이 길어지기 쉬운 앱입니다. 선택한 앱이 열리면 확인 창이 표시됩니다.</string>
-    <string name="recommend_section">추천 앱 %1$d개</string>
+    <string name="recommend_section">설치된 앱 %1$d개</string>
     <string name="recommend_footer">다른 앱은 메인 화면에서 추가할 수 있습니다.</string>
     <string name="recommend_continue">%1$d개 추가하고 계속</string>
     <string name="recommend_skip">건너뛰기</string>
