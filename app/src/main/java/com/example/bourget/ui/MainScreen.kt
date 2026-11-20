@@ -15,6 +15,7 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -62,11 +63,17 @@ private sealed interface Route {
     data object AppPicker : Route
     data class Detail(val kind: RuleKind, val target: String) : Route
     data class LaunchPicker(val kind: RuleKind, val target: String) : Route
+    data object Settings : Route
+    data object Template : Route
+    data object Licenses : Route
 }
 
 private fun Route.encode(): String = when (this) {
     Route.Home -> "home"
     Route.AppPicker -> "picker"
+    Route.Settings -> "settings"
+    Route.Template -> "template"
+    Route.Licenses -> "licenses"
     is Route.Detail -> "detail:${kind.name}:$target"
     is Route.LaunchPicker -> "launch:${kind.name}:$target"
 }
@@ -77,6 +84,9 @@ private fun decodeRoute(text: String): Route {
     val target = parts.getOrNull(2)
     return when {
         parts[0] == "picker" -> Route.AppPicker
+        parts[0] == "settings" -> Route.Settings
+        parts[0] == "template" -> Route.Template
+        parts[0] == "licenses" -> Route.Licenses
         kind == null || target == null -> Route.Home
         parts[0] == "detail" -> Route.Detail(kind, target)
         parts[0] == "launch" -> Route.LaunchPicker(kind, target)
@@ -115,6 +125,7 @@ fun MainScreen(
     val apps: AppDirectory = remember(appList) { appList?.associateBy { it.packageName } }
     val appRules by store.appRules.collectAsState(initial = null)
     val websiteRules by store.websiteRules.collectAsState(initial = null)
+    val template by store.confirmTemplate.collectAsState(initial = null)
 
     var stack by rememberSaveable { mutableStateOf(listOf(Route.Home.encode())) }
     var tab by rememberSaveable { mutableIntStateOf(0) }
@@ -144,6 +155,7 @@ fun MainScreen(
     }
 
     val ruleDeleted = stringResource(R.string.rule_deleted)
+    val templateSaved = stringResource(R.string.template_saved)
     val rulesOf: (RuleKind) -> List<Rule>? = { if (it == RuleKind.APP) appRules else websiteRules }
     val appRuleTargets = appRules.orEmpty().map { it.target }.toSet()
 
@@ -159,6 +171,7 @@ fun MainScreen(
                 onTabChange = { tab = it },
                 onAddApp = { navigate(Route.AppPicker) },
                 onOpenRule = { kind, target -> navigate(Route.Detail(kind, target)) },
+                onOpenSettings = { navigate(Route.Settings) },
                 onOpenAccessibilitySettings = onOpenAccessibilitySettings,
                 showSnackbar = showSnackbar,
                 modifier = modifier,
@@ -185,9 +198,11 @@ fun MainScreen(
                     rule = rule,
                     apps = apps,
                     appRuleTargets = appRuleTargets,
+                    template = template ?: return@Scaffold,
                     onBack = back,
                     onUpdate = { transform -> scope.launch { store.updateRule(route.kind, route.target, transform) } },
                     onPickLaunchApp = { navigate(Route.LaunchPicker(route.kind, route.target)) },
+                    onEditTemplate = { navigate(Route.Template) },
                     onDelete = {
                         back()
                         scope.launch { store.removeRule(route.kind, route.target) }
@@ -211,6 +226,27 @@ fun MainScreen(
                 },
                 modifier = modifier,
             )
+            Route.Settings -> SettingsScreen(
+                template = template ?: return@Scaffold,
+                onBack = back,
+                onEditTemplate = { navigate(Route.Template) },
+                onOpenLicenses = { navigate(Route.Licenses) },
+                modifier = modifier,
+            )
+            Route.Template -> TemplateEditorScreen(
+                saved = template ?: return@Scaffold,
+                // Examples use the user's own first rules when there are any.
+                exampleApp = appRules?.firstNotNullOfOrNull { apps?.get(it.target) },
+                exampleSite = websiteRules?.firstOrNull()?.target ?: "namu.wiki",
+                onBack = back,
+                onSave = { text ->
+                    scope.launch { store.setConfirmTemplate(text) }
+                    back()
+                    showSnackbar(templateSaved, null)
+                },
+                modifier = modifier,
+            )
+            Route.Licenses -> LicensesScreen(onBack = back, modifier = modifier)
         }
     }
 }
@@ -225,6 +261,7 @@ private fun HomeScreen(
     onTabChange: (Int) -> Unit,
     onAddApp: () -> Unit,
     onOpenRule: (RuleKind, String) -> Unit,
+    onOpenSettings: () -> Unit,
     onOpenAccessibilitySettings: () -> Unit,
     showSnackbar: ShowSnackbar,
     modifier: Modifier = Modifier,
@@ -245,6 +282,9 @@ private fun HomeScreen(
             )
             IconButton(onClick = { showInfo = true }) {
                 Icon(Icons.Outlined.Info, contentDescription = stringResource(R.string.info_open))
+            }
+            IconButton(onClick = onOpenSettings) {
+                Icon(Icons.Outlined.Settings, contentDescription = stringResource(R.string.settings_open))
             }
         }
         Row(

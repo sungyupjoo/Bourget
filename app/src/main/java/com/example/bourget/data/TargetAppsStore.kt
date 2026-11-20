@@ -26,7 +26,8 @@ const val DISCLOSURE_VERSION = 2
 
 /**
  * Stores only what the user made: app and website rules (target, on/off, action, app to launch),
- * whether the intro was seen, and which disclosure version the user agreed to. Detected apps,
+ * the confirm popup template, whether the intro was seen, and which disclosure version the user
+ * agreed to. Detected apps,
  * visited URLs or anything read from the screen are never persisted.
  */
 class TargetAppsStore(context: Context) {
@@ -41,6 +42,14 @@ class TargetAppsStore(context: Context) {
 
     val appRules: Flow<List<Rule>> = rules(RuleKind.APP)
     val websiteRules: Flow<List<Rule>> = rules(RuleKind.WEBSITE)
+
+    /** The confirm popup title template; the default when unset or no longer valid. */
+    val confirmTemplate: Flow<String> =
+        prefs.map { p -> p[CONFIRM_TEMPLATE]?.takeIf { templateError(it) == null } ?: DEFAULT_TEMPLATE }
+
+    suspend fun setConfirmTemplate(template: String) {
+        dataStore.edit { it[CONFIRM_TEMPLATE] = template }
+    }
 
     /** True once the user agreed to the current [DISCLOSURE_VERSION] in the app. */
     val consentedToCurrentDisclosure: Flow<Boolean> =
@@ -119,6 +128,7 @@ class TargetAppsStore(context: Context) {
     private companion object {
         val APP_RULES = stringPreferencesKey("app_rules")
         val WEBSITE_RULES = stringPreferencesKey("website_rules")
+        val CONFIRM_TEMPLATE = stringPreferencesKey("confirm_template")
         val INTRO_DONE = booleanPreferencesKey("intro_done")
         val CONSENT_VERSION = intPreferencesKey("consent_version")
 

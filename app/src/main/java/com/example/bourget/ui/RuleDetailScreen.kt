@@ -27,10 +27,10 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.example.bourget.R
-import com.example.bourget.action.objectParticle
 import com.example.bourget.data.Rule
 import com.example.bourget.data.RuleAction
 import com.example.bourget.data.RuleKind
+import com.example.bourget.data.applyTemplate
 
 /**
  * One rule: on/off, what happens when its app or site opens, and deletion. Changes are saved at
@@ -43,9 +43,11 @@ fun RuleDetailScreen(
     rule: Rule,
     apps: AppDirectory,
     appRuleTargets: Set<String>,
+    template: String,
     onBack: () -> Unit,
     onUpdate: ((Rule) -> Rule) -> Unit,
     onPickLaunchApp: () -> Unit,
+    onEditTemplate: () -> Unit,
     onDelete: () -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -89,7 +91,8 @@ fun RuleDetailScreen(
                     selected = launch == null,
                     onClick = { onUpdate { it.copy(action = RuleAction.CONFIRM, launchPackage = null) } },
                 ) {
-                    Text(confirmPreview(kind, name), style = MaterialTheme.typography.titleMedium)
+                    Text(applyTemplate(template, name), style = MaterialTheme.typography.titleMedium)
+                    UnderlineButton(stringResource(R.string.template_change), onClick = onEditTemplate)
                 }
                 RowRule()
                 ActionOption(
@@ -143,12 +146,6 @@ fun RuleDetailScreen(
         )
     }
 }
-
-/** The popup title this rule would show. */
-@Composable
-private fun confirmPreview(kind: RuleKind, name: String): String =
-    if (kind == RuleKind.APP) stringResource(R.string.confirm_title, name, objectParticle(name))
-    else stringResource(R.string.confirm_title_website)
 
 /** A radio row; the chosen option's [details] appear under it, indented, without a box. */
 @Composable

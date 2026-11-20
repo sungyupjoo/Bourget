@@ -35,9 +35,9 @@ class ConfirmOverlay(private val service: AccessibilityService) {
 
     private var view: View? = null
 
-    fun show(title: String, message: String? = null, icon: Drawable? = null, onGoBack: () -> Unit) {
+    fun show(title: String, icon: Drawable? = null, onGoBack: () -> Unit) {
         if (view != null) return
-        val root = build(title, message, icon) { goBack ->
+        val root = build(title, icon) { goBack ->
             dismiss()
             // Run only after the overlay window is gone: a global BACK sent while it is still
             // showing would be consumed by the overlay.
@@ -60,10 +60,9 @@ class ConfirmOverlay(private val service: AccessibilityService) {
         service.getSystemService(WindowManager::class.java).removeViewImmediate(current)
     }
 
-    private fun build(title: String, message: String?, icon: Drawable?, onChoice: (goBack: Boolean) -> Unit): View {
+    private fun build(title: String, icon: Drawable?, onChoice: (goBack: Boolean) -> Unit): View {
         val context: Context = service
         val bold = ResourcesCompat.getFont(context, R.font.line_seed_kr_bold)
-        val regular = ResourcesCompat.getFont(context, R.font.line_seed_kr_regular)
 
         val content = LinearLayout(context).apply {
             orientation = LinearLayout.VERTICAL
@@ -79,17 +78,8 @@ class ConfirmOverlay(private val service: AccessibilityService) {
             setTextColor(PAPER)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 30f)
             TextViewCompat.setLineHeight(this, sp(40))
-            setPadding(0, dp(20), 0, if (message == null) dp(40) else dp(12))
+            setPadding(0, dp(20), 0, dp(40))
         })
-        if (message != null) {
-            content.addView(TextView(context).apply {
-                text = message
-                typeface = regular
-                setTextColor(PAPER_VARIANT)
-                setTextSize(TypedValue.COMPLEX_UNIT_SP, 18f)
-                setPadding(0, 0, 0, dp(40))
-            })
-        }
         content.addView(button(context, R.string.confirm_go_back, filled = true) { onChoice(true) },
             LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
         content.addView(button(context, R.string.confirm_continue, filled = false) { onChoice(false) },
@@ -143,14 +133,4 @@ class ConfirmOverlay(private val service: AccessibilityService) {
         val PAPER = 0xFFF4F1EC.toInt()
         val PAPER_VARIANT = 0xFFBDB7AE.toInt()
     }
-}
-
-/**
- * Korean object particle for [word]: "을" after a final consonant, "를" otherwise.
- * Falls back to "을(를)" when the word does not end in a Hangul syllable (e.g. "YouTube").
- */
-internal fun objectParticle(word: String): String {
-    val last = word.trimEnd().lastOrNull()
-    if (last == null || last !in '가'..'힣') return "을(를)"
-    return if ((last - '가') % 28 != 0) "을" else "를"
 }

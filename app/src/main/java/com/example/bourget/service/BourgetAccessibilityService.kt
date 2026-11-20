@@ -11,10 +11,11 @@ import android.view.accessibility.AccessibilityEvent
 import android.view.inputmethod.InputMethodManager
 import com.example.bourget.R
 import com.example.bourget.action.ConfirmOverlay
-import com.example.bourget.action.objectParticle
+import com.example.bourget.data.DEFAULT_TEMPLATE
 import com.example.bourget.data.Rule
 import com.example.bourget.data.RuleAction
 import com.example.bourget.data.TargetAppsStore
+import com.example.bourget.data.applyTemplate
 import com.example.bourget.detection.AppLaunchDetector
 import com.example.bourget.detection.LaunchGuard
 import com.example.bourget.detection.browser.SUPPORTED_BROWSERS
@@ -43,6 +44,7 @@ class BourgetAccessibilityService : AccessibilityService() {
     private val launchGuard = LaunchGuard()
     private var appRules: Map<String, Rule> = emptyMap()
     private var websiteRules: Map<String, Rule> = emptyMap()
+    private var template = DEFAULT_TEMPLATE
     private var scope: CoroutineScope? = null
     private var ignoredPackages: Set<String> = emptySet()
     private var currentApp: String? = null
@@ -72,6 +74,7 @@ class BourgetAccessibilityService : AccessibilityService() {
                 }
             }
             launch { store.migrate() }
+            launch { store.confirmTemplate.collect { template = it } }
             launch {
                 store.appRules.collect { rules ->
                     appRules = rules.associateBy { it.target }
@@ -126,7 +129,7 @@ class BourgetAccessibilityService : AccessibilityService() {
             if (!launchInstead(appRules[pkg], now)) {
                 val label = appLabel(pkg)
                 overlay.show(
-                    title = getString(R.string.confirm_title, label, objectParticle(label)),
+                    title = applyTemplate(template, label),
                     icon = appIcon(pkg),
                     onGoBack = { performGlobalAction(GLOBAL_ACTION_HOME) },
                 )
@@ -174,8 +177,8 @@ class BourgetAccessibilityService : AccessibilityService() {
             // The browser stays on the site; the user can come back to it.
             if (launchInstead(rule?.let { websiteRules[it] }, now)) return
             overlay.show(
-                title = getString(R.string.confirm_title_website),
-                message = rule,
+                title = applyTemplate(template, rule ?: host),
+                icon = getDrawable(R.drawable.ic_globe)?.mutate()?.apply { setTint(GLOBE_TINT) },
                 onGoBack = { performGlobalAction(GLOBAL_ACTION_BACK) },
             )
         }
@@ -229,6 +232,8 @@ class BourgetAccessibilityService : AccessibilityService() {
 
     private companion object {
         const val SYSTEM_UI_PACKAGE = "com.android.systemui"
+        // The popup's secondary text color, so the globe reads on its dark background.
+        const val GLOBE_TINT = 0xFFBDB7AE.toInt()
         const val URL_CHECK_DEBOUNCE_MS = 300L
         const val URL_CHECK_MAX_DELAY_MS = 1_000L
     }

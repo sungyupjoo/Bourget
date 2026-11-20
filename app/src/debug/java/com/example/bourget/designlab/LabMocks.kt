@@ -58,8 +58,9 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.bourget.R
-import com.example.bourget.action.objectParticle
+import com.example.bourget.data.DEFAULT_TEMPLATE
 import com.example.bourget.data.LaunchableApp
+import com.example.bourget.data.applyTemplate
 
 /** A rule as the redesigned main list would show it. Mock only: nothing here is stored. */
 data class MockRule(val app: LaunchableApp, val enabled: Boolean, val launchTo: LaunchableApp?)
@@ -69,7 +70,7 @@ private fun actionText(rule: MockRule, on: Boolean): String {
     return if (on) action else "꺼짐 · $action"
 }
 
-private fun confirmTitle(label: String) = "정말 $label${objectParticle(label)} 열고 싶으신가요?"
+private fun confirmTitle(label: String) = applyTemplate(DEFAULT_TEMPLATE, label)
 
 @Composable
 private fun AppIcon(app: LaunchableApp, size: Int) {
