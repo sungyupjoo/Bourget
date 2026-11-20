@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.selection.selectable
@@ -38,6 +39,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -286,10 +288,19 @@ private fun HomeScreen(
             Modifier.fillMaxWidth().padding(start = ScreenMargin, end = 12.dp, top = 20.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
+            // The portrait logo beside the wordmark, in the text color so it follows dark mode.
+            Icon(
+                painterResource(R.drawable.ic_bourget),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(width = 32.dp, height = 40.dp),
+            )
+            // One step below the screen titles: with the portrait beside it, the wordmark no
+            // longer needs to carry the header alone.
             Text(
                 stringResource(R.string.app_name),
-                style = MaterialTheme.typography.displaySmall,
-                modifier = Modifier.weight(1f),
+                style = MaterialTheme.typography.headlineMedium,
+                modifier = Modifier.weight(1f).padding(start = 10.dp),
             )
             IconButton(onClick = { showInfo = true }) {
                 Icon(Icons.Outlined.Info, contentDescription = stringResource(R.string.info_open))
