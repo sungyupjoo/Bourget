@@ -1,5 +1,8 @@
 package com.example.bourget.ui
 
+import android.graphics.Typeface
+import android.text.Spanned
+import android.text.style.StyleSpan
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -12,8 +15,12 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.example.bourget.R
@@ -79,10 +86,24 @@ fun PrivacyPolicyScreen(onBack: () -> Unit, modifier: Modifier = Modifier) {
             ScreenTitle(stringResource(R.string.privacy_policy_title), Modifier.padding(bottom = 16.dp))
             InkRule(Modifier.padding(horizontal = ScreenMargin))
             Text(
-                stringResource(R.string.privacy_policy_body),
+                boldStringResource(R.string.privacy_policy_body),
                 style = MaterialTheme.typography.bodyLarge,
                 modifier = Modifier.padding(horizontal = ScreenMargin, vertical = 24.dp),
             )
+        }
+    }
+}
+
+/** A string resource with its <b> tags kept as bold, which stringResource drops. */
+@Composable
+private fun boldStringResource(id: Int): AnnotatedString {
+    val text = LocalContext.current.resources.getText(id)
+    return buildAnnotatedString {
+        append(text.toString())
+        if (text is Spanned) {
+            text.getSpans(0, text.length, StyleSpan::class.java)
+                .filter { it.style == Typeface.BOLD }
+                .forEach { addStyle(SpanStyle(fontWeight = FontWeight.Bold), text.getSpanStart(it), text.getSpanEnd(it)) }
         }
     }
 }
