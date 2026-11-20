@@ -1,6 +1,7 @@
 package com.example.bourget.service
 
 import android.accessibilityservice.AccessibilityService
+import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
 import android.os.Handler
@@ -11,8 +12,11 @@ import android.view.inputmethod.InputMethodManager
 import com.example.bourget.R
 import com.example.bourget.action.ConfirmOverlay
 import com.example.bourget.action.objectParticle
+import com.example.bourget.data.Rule
+import com.example.bourget.data.RuleAction
 import com.example.bourget.data.TargetAppsStore
 import com.example.bourget.detection.AppLaunchDetector
+import com.example.bourget.detection.LaunchGuard
 import com.example.bourget.detection.browser.SUPPORTED_BROWSERS
 import com.example.bourget.detection.matchingRule
 import kotlinx.coroutines.CoroutineScope
@@ -27,6 +31,8 @@ import kotlinx.coroutines.launch
  * App rules: uses only the package name of TYPE_WINDOW_STATE_CHANGED events.
  * Website rules: in supported browsers only, reads the address bar node (by view id) and keeps
  * just its host. Page content is never read, and nothing read from the screen is stored.
+ *
+ * A matching rule either shows the confirm popup or launches the app the user picked for it.
  */
 class BourgetAccessibilityService : AccessibilityService() {
 
@@ -34,6 +40,9 @@ class BourgetAccessibilityService : AccessibilityService() {
     private var appDetector: AppLaunchDetector? = null
     /** Keyed by website rule domain, so "same site" and per-rule cooldown reuse the app logic. */
     private var webDetector: AppLaunchDetector? = null
+    private val launchGuard = LaunchGuard()
+    private var appRules: Map<String, Rule> = emptyMap()
+    private var websiteRules: Map<String, Rule> = emptyMap()
     private var scope: CoroutineScope? = null
     private var ignoredPackages: Set<String> = emptySet()
     private var currentApp: String? = null
@@ -65,11 +74,13 @@ class BourgetAccessibilityService : AccessibilityService() {
             launch { store.migrate() }
             launch {
                 store.appRules.collect { rules ->
+                    appRules = rules.associateBy { it.target }
                     appDetector.targetPackages = rules.filter { it.enabled }.map { it.target }.toSet()
                 }
             }
             launch {
                 store.websiteRules.collect { rules ->
+                    websiteRules = rules.associateBy { it.target }
                     webDetector.targetPackages = rules.filter { it.enabled }.map { it.target }.toSet()
                 }
             }
@@ -111,13 +122,15 @@ class BourgetAccessibilityService : AccessibilityService() {
             webDetector?.onForegroundChanged("app:$pkg", now)
         }
 
-        if (appDetector.onForegroundChanged(pkg, now)) {
-            val label = appLabel(pkg)
-            overlay.show(
-                title = getString(R.string.confirm_title, label, objectParticle(label)),
-                icon = appIcon(pkg),
-                onGoBack = { performGlobalAction(GLOBAL_ACTION_HOME) },
-            )
+        if (appDetector.onForegroundChanged(pkg, now, launchGuard.isExempt(pkg, now))) {
+            if (!launchInstead(appRules[pkg], now)) {
+                val label = appLabel(pkg)
+                overlay.show(
+                    title = getString(R.string.confirm_title, label, objectParticle(label)),
+                    icon = appIcon(pkg),
+                    onGoBack = { performGlobalAction(GLOBAL_ACTION_HOME) },
+                )
+            }
         } else if (switched && pkg !in appDetector.targetPackages) {
             // User left the target app some other way; don't leave the dialog floating.
             overlay.dismiss()
@@ -156,12 +169,32 @@ class BourgetAccessibilityService : AccessibilityService() {
         } ?: return
 
         val rule = matchingRule(host, webDetector.targetPackages)
-        if (webDetector.onForegroundChanged(rule ?: "host:$host", SystemClock.elapsedRealtime())) {
+        val now = SystemClock.elapsedRealtime()
+        if (webDetector.onForegroundChanged(rule ?: "host:$host", now, launchGuard.isExempt(browser, now))) {
+            // The browser stays on the site; the user can come back to it.
+            if (launchInstead(rule?.let { websiteRules[it] }, now)) return
             overlay.show(
                 title = getString(R.string.confirm_title_website),
                 message = rule,
                 onGoBack = { performGlobalAction(GLOBAL_ACTION_BACK) },
             )
+        }
+    }
+
+    /**
+     * Opens the app [rule] launches instead of the popup. Returns false (show the popup) when the
+     * rule shows the popup or its app is gone. The launched app is exempt from rules for a few
+     * seconds so rules that launch each other cannot loop.
+     */
+    private fun launchInstead(rule: Rule?, now: Long): Boolean {
+        val target = rule?.launchPackage?.takeIf { rule.action == RuleAction.LAUNCH } ?: return false
+        val intent = packageManager.getLaunchIntentForPackage(target) ?: return false
+        launchGuard.onLaunched(target, now)
+        return try {
+            startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
+            true
+        } catch (e: ActivityNotFoundException) {
+            false
         }
     }
 

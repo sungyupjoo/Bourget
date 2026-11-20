@@ -11,11 +11,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material3.Button
-import androidx.compose.material3.Icon
-import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -50,6 +46,7 @@ fun WebsiteRulesTab(
     rules: List<Rule>?,
     apps: AppDirectory,
     showSnackbar: ShowSnackbar,
+    onOpenRule: (String) -> Unit,
     modifier: Modifier = Modifier,
 ) {
     var input by rememberSaveable { mutableStateOf("") }
@@ -145,15 +142,8 @@ fun WebsiteRulesTab(
                         onEnabledChange = { on ->
                             scope.launch { store.updateRule(RuleKind.WEBSITE, rule.target) { it.copy(enabled = on) } }
                         },
-                        onClick = null,
-                    ) {
-                        IconButton(onClick = { scope.launch { store.removeRule(RuleKind.WEBSITE, rule.target) } }) {
-                            Icon(
-                                Icons.Default.Delete,
-                                contentDescription = stringResource(R.string.website_delete, rule.target),
-                            )
-                        }
-                    }
+                        onClick = { onOpenRule(rule.target) },
+                    )
                 }
             }
         }

@@ -49,6 +49,8 @@ import com.example.bourget.data.Rule
 import com.example.bourget.data.RuleKind
 import com.example.bourget.data.TargetAppsStore
 import com.example.bourget.data.loadLaunchableApps
+import com.example.bourget.data.withAdded
+import com.example.bourget.data.withLaunch
 import com.example.bourget.ui.theme.LocalInactiveTab
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
@@ -58,16 +60,28 @@ import kotlinx.coroutines.withContext
 private sealed interface Route {
     data object Home : Route
     data object AppPicker : Route
+    data class Detail(val kind: RuleKind, val target: String) : Route
+    data class LaunchPicker(val kind: RuleKind, val target: String) : Route
 }
 
 private fun Route.encode(): String = when (this) {
     Route.Home -> "home"
     Route.AppPicker -> "picker"
+    is Route.Detail -> "detail:${kind.name}:$target"
+    is Route.LaunchPicker -> "launch:${kind.name}:$target"
 }
 
-private fun decodeRoute(text: String): Route = when (text) {
-    "picker" -> Route.AppPicker
-    else -> Route.Home
+private fun decodeRoute(text: String): Route {
+    val parts = text.split(':', limit = 3)
+    val kind = RuleKind.entries.firstOrNull { it.name == parts.getOrNull(1) }
+    val target = parts.getOrNull(2)
+    return when {
+        parts[0] == "picker" -> Route.AppPicker
+        kind == null || target == null -> Route.Home
+        parts[0] == "detail" -> Route.Detail(kind, target)
+        parts[0] == "launch" -> Route.LaunchPicker(kind, target)
+        else -> Route.Home
+    }
 }
 
 /** Shows [text] with an optional "실행 취소" that runs [undo]. */
@@ -129,9 +143,13 @@ fun MainScreen(
         }
     }
 
+    val ruleDeleted = stringResource(R.string.rule_deleted)
+    val rulesOf: (RuleKind) -> List<Rule>? = { if (it == RuleKind.APP) appRules else websiteRules }
+    val appRuleTargets = appRules.orEmpty().map { it.target }.toSet()
+
     Scaffold(snackbarHost = { SnackbarHost(snackbarHost) }) { innerPadding ->
         val modifier = Modifier.padding(innerPadding).fillMaxSize()
-        when (decodeRoute(stack.last())) {
+        when (val route = decodeRoute(stack.last())) {
             Route.Home -> HomeScreen(
                 store = store,
                 apps = apps,
@@ -140,6 +158,7 @@ fun MainScreen(
                 tab = tab,
                 onTabChange = { tab = it },
                 onAddApp = { navigate(Route.AppPicker) },
+                onOpenRule = { kind, target -> navigate(Route.Detail(kind, target)) },
                 onOpenAccessibilitySettings = onOpenAccessibilitySettings,
                 showSnackbar = showSnackbar,
                 modifier = modifier,
@@ -150,6 +169,46 @@ fun MainScreen(
                 rules = appRules.orEmpty(),
                 onDone = back,
                 showSnackbar = showSnackbar,
+                modifier = modifier,
+            )
+            is Route.Detail -> {
+                val rules = rulesOf(route.kind) ?: return@Scaffold
+                val index = rules.indexOfFirst { it.target == route.target }
+                // Gone (e.g. its app was uninstalled while we were away): nothing to show.
+                if (index < 0) {
+                    LaunchedEffect(Unit) { back() }
+                    return@Scaffold
+                }
+                val rule = rules[index]
+                RuleDetailScreen(
+                    kind = route.kind,
+                    rule = rule,
+                    apps = apps,
+                    appRuleTargets = appRuleTargets,
+                    onBack = back,
+                    onUpdate = { transform -> scope.launch { store.updateRule(route.kind, route.target, transform) } },
+                    onPickLaunchApp = { navigate(Route.LaunchPicker(route.kind, route.target)) },
+                    onDelete = {
+                        back()
+                        scope.launch { store.removeRule(route.kind, route.target) }
+                        showSnackbar(ruleDeleted) {
+                            scope.launch { store.editRules(route.kind) { it.withAdded(rule, index) } }
+                        }
+                    },
+                    modifier = modifier,
+                )
+            }
+            is Route.LaunchPicker -> LaunchPickerScreen(
+                kind = route.kind,
+                ruleTarget = route.target,
+                current = rulesOf(route.kind)?.firstOrNull { it.target == route.target }?.launchPackage,
+                apps = appList,
+                appRuleTargets = appRuleTargets,
+                onBack = back,
+                onPick = { pkg ->
+                    scope.launch { store.updateRule(route.kind, route.target) { it.withLaunch(pkg) } }
+                    back()
+                },
                 modifier = modifier,
             )
         }
@@ -165,6 +224,7 @@ private fun HomeScreen(
     tab: Int,
     onTabChange: (Int) -> Unit,
     onAddApp: () -> Unit,
+    onOpenRule: (RuleKind, String) -> Unit,
     onOpenAccessibilitySettings: () -> Unit,
     showSnackbar: ShowSnackbar,
     modifier: Modifier = Modifier,
@@ -199,13 +259,14 @@ private fun HomeScreen(
                 apps = apps,
                 rules = appRules,
                 onAddApp = onAddApp,
+                onOpenRule = { onOpenRule(RuleKind.APP, it) },
                 onEnabledChange = { rule, on ->
                     scope.launch { store.updateRule(RuleKind.APP, rule.target) { it.copy(enabled = on) } }
                 },
                 modifier = Modifier.weight(1f),
             )
         } else {
-            WebsiteRulesTab(store, websiteRules, apps, showSnackbar, Modifier.weight(1f))
+            WebsiteRulesTab(store, websiteRules, apps, showSnackbar, { onOpenRule(RuleKind.WEBSITE, it) }, Modifier.weight(1f))
         }
     }
 
@@ -255,6 +316,7 @@ private fun AppRulesTab(
     apps: AppDirectory,
     rules: List<Rule>?,
     onAddApp: () -> Unit,
+    onOpenRule: (String) -> Unit,
     onEnabledChange: (Rule, Boolean) -> Unit,
     modifier: Modifier = Modifier,
 ) {
@@ -289,7 +351,7 @@ private fun AppRulesTab(
                         name = apps.label(rule.target),
                         apps = apps,
                         onEnabledChange = { onEnabledChange(rule, it) },
-                        onClick = null,
+                        onClick = { onOpenRule(rule.target) },
                     )
                 }
             }

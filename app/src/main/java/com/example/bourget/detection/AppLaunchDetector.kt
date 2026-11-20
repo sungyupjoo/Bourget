@@ -5,6 +5,7 @@ package com.example.bourget.detection
  *
  * Triggers only when the foreground moves *into* a target package from a different package,
  * and not again for the same package until [cooldownMillis] has elapsed. Cooldowns are per package.
+ * An [exempt] change (an app Bourget itself just launched) is tracked but never triggers.
  * Pure Kotlin (no Android types) so it can be unit tested.
  */
 class AppLaunchDetector(
@@ -15,10 +16,10 @@ class AppLaunchDetector(
     private val lastTriggeredAt = mutableMapOf<String, Long>()
 
     /** Returns true if an intervention should run for [packageName]. */
-    fun onForegroundChanged(packageName: String, nowMillis: Long): Boolean {
+    fun onForegroundChanged(packageName: String, nowMillis: Long, exempt: Boolean = false): Boolean {
         val previous = foregroundPackage
         foregroundPackage = packageName
-        if (packageName == previous || packageName !in targetPackages) return false
+        if (exempt || packageName == previous || packageName !in targetPackages) return false
 
         val last = lastTriggeredAt[packageName]
         if (last != null && nowMillis - last < cooldownMillis) return false
