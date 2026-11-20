@@ -42,7 +42,7 @@ fun IntroScreen(onStart: () -> Unit, modifier: Modifier = Modifier) {
             )
             Column(Modifier.padding(top = 16.dp)) {
                 InkRule(Modifier.padding(horizontal = ScreenMargin))
-                listOf(R.string.intro_principle_free, R.string.intro_principle_account, R.string.intro_principle_offline)
+                listOf(R.string.intro_principle_privacy, R.string.intro_principle_open_source, R.string.intro_principle_free)
                     .forEachIndexed { i, principle ->
                         if (i > 0) RowRule()
                         Text(
