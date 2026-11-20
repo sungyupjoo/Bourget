@@ -17,7 +17,6 @@ import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -62,20 +61,15 @@ fun WebsiteRulesTab(store: TargetAppsStore, modifier: Modifier = Modifier) {
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(8.dp),
         ) {
-            OutlinedTextField(
+            CompactTextField(
                 value = input,
                 onValueChange = {
                     input = it
                     invalid = false
                 },
-                placeholder = { Text(stringResource(R.string.website_input_hint)) },
+                placeholder = stringResource(R.string.website_input_hint),
                 isError = invalid,
-                supportingText = if (invalid) {
-                    { Text(stringResource(R.string.website_input_invalid)) }
-                } else {
-                    null
-                },
-                singleLine = true,
+                supportingText = if (invalid) stringResource(R.string.website_input_invalid) else null,
                 keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri, imeAction = ImeAction.Done),
                 keyboardActions = KeyboardActions(onDone = { add() }),
                 modifier = Modifier.weight(1f),

@@ -19,6 +19,7 @@ import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Clear
@@ -31,7 +32,6 @@ import androidx.compose.material3.IconButton
 import androidx.compose.material3.InputChip
 import androidx.compose.material3.InputChipDefaults
 import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -47,6 +47,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -120,16 +121,21 @@ fun AppPickerScreen(store: TargetAppsStore, refreshKey: Int, onOpenSettings: () 
                 WebsiteRulesTab(store, Modifier.weight(1f))
                 return@Column
             }
-            OutlinedTextField(
+            CompactTextField(
                 value = query,
                 onValueChange = { query = it },
-                placeholder = { Text(stringResource(R.string.apps_search)) },
-                singleLine = true,
+                placeholder = stringResource(R.string.apps_search),
                 trailingIcon = {
                     if (query.isNotEmpty()) {
-                        IconButton(onClick = { query = "" }) {
-                            Icon(Icons.Default.Clear, contentDescription = stringResource(R.string.apps_search_clear))
-                        }
+                        Icon(
+                            Icons.Default.Clear,
+                            contentDescription = stringResource(R.string.apps_search_clear),
+                            modifier = Modifier
+                                .clip(CircleShape)
+                                .clickable { query = "" }
+                                .padding(6.dp)
+                                .size(20.dp),
+                        )
                     }
                 },
                 modifier = Modifier
