@@ -63,11 +63,13 @@ import kotlinx.coroutines.withContext
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AppPickerScreen(store: TargetAppsStore, onOpenSettings: () -> Unit) {
+fun AppPickerScreen(store: TargetAppsStore, refreshKey: Int, onOpenSettings: () -> Unit) {
     val context = LocalContext.current
     val iconSizePx = with(LocalDensity.current) { 40.dp.roundToPx() }
     var apps by remember { mutableStateOf<List<LaunchableApp>?>(null) }
-    LaunchedEffect(Unit) {
+    // Reloaded on every resume ([refreshKey]) so apps installed or removed while Bourget was in
+    // the background are reflected. The previous list stays on screen while reloading.
+    LaunchedEffect(refreshKey) {
         apps = withContext(Dispatchers.IO) { loadLaunchableApps(context, iconSizePx) }
     }
     val selected by store.targetPackages.collectAsState(initial = emptySet())
