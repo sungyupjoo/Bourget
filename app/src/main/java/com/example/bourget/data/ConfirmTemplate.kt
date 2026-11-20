@@ -2,19 +2,20 @@ package com.example.bourget.data
 
 /**
  * The confirm popup's title, written by the user once for every rule. "{이름}" becomes the app
- * name or the domain. Particles are not adjusted; users write "을(를)" themselves.
+ * name or the domain. Particles are not adjusted, so the defaults set the name off with a comma
+ * ("YouTube, 또 볼 거니?"), which reads naturally after any name.
  * Pure Kotlin so it can be unit tested.
  */
 
 const val NAME_PLACEHOLDER = "{이름}"
-const val DEFAULT_TEMPLATE = "정말 {이름}을(를) 열고 싶으신가요?"
+const val DEFAULT_TEMPLATE = "{이름}, 또 볼 거니?"
 const val TEMPLATE_MAX_LENGTH = 60
 
 val TEMPLATE_EXAMPLES = listOf(
     DEFAULT_TEMPLATE,
-    "{이름}을(를) 여시겠습니까?",
-    "{이름}을(를) 계속 사용하시겠습니까?",
-    "{이름} 사용 확인",
+    "{이름}, 정말 열고 싶으신가요?",
+    "{이름}, 지금 꼭 필요한가요?",
+    "{이름}, 계속 사용하시겠습니까?",
 )
 
 enum class TemplateError { EMPTY, TOO_LONG, BAD_BRACES }

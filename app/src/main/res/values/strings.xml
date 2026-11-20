@@ -106,7 +106,7 @@
     <string name="template_input">문구</string>
     <string name="template_insert_name">{이름} 넣기</string>
     <string name="template_count">%1$d/%2$d</string>
-    <string name="template_hint">{이름}에 앱 이름 또는 사이트 주소가 들어갑니다. 조사는 직접 입력하세요. 예: 을(를)</string>
+    <string name="template_hint">{이름}에 앱 이름 또는 사이트 주소가 들어갑니다.</string>
     <string name="template_no_name">{이름}이 없으면 문구에 앱 이름이 표시되지 않습니다. 아이콘은 표시됩니다.</string>
     <string name="template_error_empty">문구를 입력하세요.</string>
     <string name="template_error_too_long">60자까지 입력할 수 있습니다.</string>
