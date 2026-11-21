@@ -38,13 +38,16 @@ class ConfirmOverlay(private val service: AccessibilityService) {
 
     private var view: View? = null
 
-    fun show(title: String, icon: Drawable? = null, onGoBack: () -> Unit) {
+    val isShowing: Boolean get() = view != null
+
+    /** [note] is set small above the buttons. */
+    fun show(title: String, icon: Drawable? = null, note: String? = null, onGoBack: () -> Unit, onContinue: () -> Unit = {}) {
         if (view != null) return
-        val root = build(title, icon) { goBack ->
+        val root = build(title, icon, note) { goBack ->
             dismiss()
             // Run only after the overlay window is gone: a global BACK sent while it is still
             // showing would be consumed by the overlay.
-            if (goBack) onGoBack()
+            if (goBack) onGoBack() else onContinue()
         }
         val params = WindowManager.LayoutParams(
             MATCH_PARENT,
@@ -65,7 +68,7 @@ class ConfirmOverlay(private val service: AccessibilityService) {
         service.getSystemService(WindowManager::class.java).removeViewImmediate(current)
     }
 
-    private fun build(title: String, icon: Drawable?, onChoice: (goBack: Boolean) -> Unit): View {
+    private fun build(title: String, icon: Drawable?, note: String?, onChoice: (goBack: Boolean) -> Unit): View {
         val context: Context = service
         val bold = ResourcesCompat.getFont(context, R.font.line_seed_kr_bold)
 
@@ -96,10 +99,19 @@ class ConfirmOverlay(private val service: AccessibilityService) {
             setTextColor(PAPER)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 30f)
             TextViewCompat.setLineHeight(this, sp(40))
-            setPadding(0, dp(20), 0, dp(40))
+            setPadding(0, dp(20), 0, dp(if (note != null) 20 else 40))
             ViewCompat.setAccessibilityHeading(this, true)
         }
         content.addView(question)
+        if (note != null) {
+            content.addView(TextView(context).apply {
+                text = note
+                typeface = ResourcesCompat.getFont(context, R.font.line_seed_kr_regular)
+                setTextColor(PAPER_VARIANT)
+                setTextSize(TypedValue.COMPLEX_UNIT_SP, 13f)
+                setPadding(0, 0, 0, dp(20))
+            })
+        }
         // Screen readers start on the question, then reach the two buttons.
         question.post { question.performAccessibilityAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null) }
         content.addView(button(context, R.string.confirm_go_back, filled = true) { onChoice(true) },

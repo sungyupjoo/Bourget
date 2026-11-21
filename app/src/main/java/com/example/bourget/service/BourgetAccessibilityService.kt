@@ -4,6 +4,7 @@ import android.accessibilityservice.AccessibilityService
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
@@ -38,6 +39,7 @@ import kotlinx.coroutines.launch
 class BourgetAccessibilityService : AccessibilityService() {
 
     private val overlay = ConfirmOverlay(this)
+    private val counts = DailyCounts()
     private var appDetector: AppLaunchDetector? = null
     /** Keyed by website rule domain, so "same site" and per-rule cooldown reuse the app logic. */
     private var webDetector: AppLaunchDetector? = null
@@ -127,9 +129,9 @@ class BourgetAccessibilityService : AccessibilityService() {
 
         if (appDetector.onForegroundChanged(pkg, now, launchGuard.isExempt(pkg, now))) {
             if (!launchInstead(appRules[pkg], now)) {
-                val label = appLabel(pkg)
-                overlay.show(
-                    title = applyTemplate(template, label),
+                showConfirm(
+                    key = "app:$pkg",
+                    title = applyTemplate(template, appLabel(pkg)),
                     icon = appIcon(pkg),
                     onGoBack = { performGlobalAction(GLOBAL_ACTION_HOME) },
                 )
@@ -176,12 +178,27 @@ class BourgetAccessibilityService : AccessibilityService() {
         if (webDetector.onForegroundChanged(rule ?: "host:$host", now, launchGuard.isExempt(browser, now))) {
             // The browser stays on the site; the user can come back to it.
             if (launchInstead(rule?.let { websiteRules[it] }, now)) return
-            overlay.show(
+            showConfirm(
+                key = "web:${rule ?: host}",
                 title = applyTemplate(template, rule ?: host),
                 icon = getDrawable(R.drawable.ic_link)?.mutate()?.apply { setTint(LINK_ICON_TINT) },
                 onGoBack = { performGlobalAction(GLOBAL_ACTION_BACK) },
             )
         }
+    }
+
+    /** The confirm popup, with how many times [key] was confirmed and continued today. */
+    private fun showConfirm(key: String, title: String, icon: Drawable?, onGoBack: () -> Unit) {
+        if (overlay.isShowing) return
+        val (shown, continued) = counts.onShown(key)
+        overlay.show(
+            title = title,
+            icon = icon,
+            note = if (continued == 0) getString(R.string.confirm_count, shown)
+            else getString(R.string.confirm_count_continued, shown, continued),
+            onGoBack = onGoBack,
+            onContinue = { counts.onContinued(key) },
+        )
     }
 
     /**
