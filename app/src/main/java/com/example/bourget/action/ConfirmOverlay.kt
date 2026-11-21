@@ -84,7 +84,7 @@ class ConfirmOverlay(private val service: AccessibilityService) {
         }
         header.addView(TextView(context).apply {
             setText(R.string.app_name)
-            typeface = ResourcesCompat.getFont(context, R.font.line_seed_kr_regular)
+            typeface = bold
             setTextColor(PAPER_VARIANT)
             setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
             if (icon != null) setPadding(dp(12), 0, 0, 0)
