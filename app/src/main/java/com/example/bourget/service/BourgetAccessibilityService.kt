@@ -50,6 +50,12 @@ class BourgetAccessibilityService : AccessibilityService() {
     private var scope: CoroutineScope? = null
     private var ignoredPackages: Set<String> = emptySet()
     private var currentApp: String? = null
+    /**
+     * Whether an address was read since switching to the current app. If not, a site that matches
+     * was already open when the user came back to the browser, and going back would only reach an
+     * earlier page of the same site.
+     */
+    private var readAddressSinceSwitch = false
     private var consented = false
 
     private val handler = Handler(Looper.getMainLooper())
@@ -122,6 +128,7 @@ class BourgetAccessibilityService : AccessibilityService() {
         val switched = pkg != currentApp
         if (switched) {
             currentApp = pkg
+            readAddressSinceSwitch = false
             // Leaving or entering an app ends the current site visit, so coming back to the
             // browser on the same site counts as a new visit (subject to the cooldown).
             webDetector?.onForegroundChanged("app:$pkg", now)
@@ -172,6 +179,8 @@ class BourgetAccessibilityService : AccessibilityService() {
         } finally {
             root.recycle()
         } ?: return
+        val navigated = readAddressSinceSwitch
+        readAddressSinceSwitch = true
 
         val rule = matchingRule(host, webDetector.targetPackages)
         val now = SystemClock.elapsedRealtime()
@@ -182,7 +191,8 @@ class BourgetAccessibilityService : AccessibilityService() {
                 key = "web:${rule ?: host}",
                 title = applyTemplate(template, rule ?: host),
                 icon = getDrawable(R.drawable.ic_link)?.mutate()?.apply { setTint(LINK_ICON_TINT) },
-                onGoBack = { performGlobalAction(GLOBAL_ACTION_BACK) },
+                // Back to the site the user came from; home when there is none to go back to.
+                onGoBack = { performGlobalAction(if (navigated) GLOBAL_ACTION_BACK else GLOBAL_ACTION_HOME) },
             )
         }
     }
@@ -243,6 +253,7 @@ class BourgetAccessibilityService : AccessibilityService() {
         appDetector = null
         webDetector = null
         currentApp = null
+        readAddressSinceSwitch = false
         consented = false
         return super.onUnbind(intent)
     }
