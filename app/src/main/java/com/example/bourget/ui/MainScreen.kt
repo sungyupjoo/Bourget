@@ -2,9 +2,13 @@ package com.example.bourget.ui
 
 import android.app.backup.BackupManager
 import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -14,6 +18,7 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Settings
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -23,6 +28,8 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -35,12 +42,14 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.bourget.R
 import com.example.bourget.data.LaunchableApp
 import com.example.bourget.data.Rule
@@ -279,6 +288,7 @@ private fun HomeScreen(
     modifier: Modifier = Modifier,
 ) {
     var showInfo by rememberSaveable { mutableStateOf(false) }
+    var showAbout by rememberSaveable { mutableStateOf(false) }
     val scope = rememberCoroutineScope()
 
     Column(modifier) {
@@ -286,20 +296,33 @@ private fun HomeScreen(
             Modifier.fillMaxWidth().padding(start = ScreenMargin, end = 12.dp, top = 20.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            // The portrait logo beside the wordmark, in the text color so it follows dark mode.
-            Icon(
-                painterResource(R.drawable.ic_bourget),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.size(width = 32.dp, height = 40.dp),
-            )
-            // One step below the screen titles: with the portrait beside it, the wordmark no
-            // longer needs to carry the header alone.
-            Text(
-                stringResource(R.string.app_name),
-                style = MaterialTheme.typography.headlineMedium,
-                modifier = Modifier.weight(1f).padding(start = 10.dp),
-            )
+            // Logo and wordmark together open the about dialog.
+            Row(
+                Modifier
+                    .clip(MaterialTheme.shapes.small)
+                    .clickable(
+                        onClickLabel = stringResource(R.string.about_open),
+                        role = Role.Button,
+                    ) { showAbout = true }
+                    .padding(vertical = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                // The portrait logo beside the wordmark, in the text color so it follows dark mode.
+                Icon(
+                    painterResource(R.drawable.ic_bourget),
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.size(width = 32.dp, height = 40.dp),
+                )
+                // One step below the screen titles: with the portrait beside it, the wordmark no
+                // longer needs to carry the header alone.
+                Text(
+                    stringResource(R.string.app_name),
+                    style = MaterialTheme.typography.headlineMedium,
+                    modifier = Modifier.padding(start = 10.dp, end = 4.dp),
+                )
+            }
+            Spacer(Modifier.weight(1f))
             IconButton(onClick = { showInfo = true }) {
                 Icon(Icons.Outlined.Info, contentDescription = stringResource(R.string.info_open))
             }
@@ -338,6 +361,51 @@ private fun HomeScreen(
             onOpenSettings = onOpenAccessibilitySettings,
         )
     }
+    if (showAbout) AboutDialog(onDismiss = { showAbout = false })
+}
+
+/** Logo tap: what Bourget is for, under the Paul Bourget line it is named after. */
+@Composable
+private fun AboutDialog(onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        icon = {
+            Icon(
+                painterResource(R.drawable.ic_bourget),
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.size(width = 32.dp, height = 40.dp),
+            )
+        },
+        title = { Text(stringResource(R.string.app_name)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                // A blockquote: an ink bar down the left, the line, then the attribution.
+                Row(Modifier.height(IntrinsicSize.Min)) {
+                    VerticalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.onSurface)
+                    Column(
+                        Modifier.padding(start = 14.dp, top = 2.dp, bottom = 2.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp),
+                    ) {
+                        Text(
+                            stringResource(R.string.about_quote),
+                            style = MaterialTheme.typography.titleMedium.copy(lineHeight = 26.sp),
+                            color = MaterialTheme.colorScheme.onSurface,
+                        )
+                        Text(
+                            stringResource(R.string.about_quote_author),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        )
+                    }
+                }
+                Text(stringResource(R.string.about_body), style = MaterialTheme.typography.bodyMedium)
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) { Text(stringResource(R.string.info_close)) }
+        },
+    )
 }
 
 /** A tab drawn as large type: the selected one in ink, the other in the inactive tab color. */
