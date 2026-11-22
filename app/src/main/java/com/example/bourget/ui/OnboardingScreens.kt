@@ -17,6 +17,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.bourget.R
@@ -93,7 +94,7 @@ fun RecommendScreen(onDone: (List<String>) -> Unit, modifier: Modifier = Modifie
             )
         } else {
             val allSelected = list.all { it.packageName in selected }
-            SectionHeader(stringResource(R.string.recommend_section, list.size)) {
+            SectionHeader(pluralStringResource(R.plurals.recommend_section, list.size, list.size)) {
                 UnderlineButton(
                     stringResource(if (allSelected) R.string.deselect_all else R.string.select_all),
                     onClick = { selected = if (allSelected) emptyList() else list.map { it.packageName } },

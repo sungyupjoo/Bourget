@@ -35,6 +35,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringArrayResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.TextRange
@@ -44,13 +45,11 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.bourget.R
-import com.example.bourget.data.DEFAULT_TEMPLATE
 import com.example.bourget.data.LaunchableApp
-import com.example.bourget.data.NAME_PLACEHOLDER
-import com.example.bourget.data.TEMPLATE_EXAMPLES
 import com.example.bourget.data.TEMPLATE_MAX_LENGTH
 import com.example.bourget.data.TemplateError
 import com.example.bourget.data.applyTemplate
+import com.example.bourget.data.hasNamePlaceholder
 import com.example.bourget.data.templateError
 import com.example.bourget.data.templateLength
 
@@ -76,6 +75,9 @@ fun TemplateEditorScreen(
     var previewTab by rememberSaveable { mutableIntStateOf(0) }
     var confirmDiscard by rememberSaveable { mutableStateOf(false) }
     val text = value.text
+    val nameToken = stringResource(R.string.template_name_token)
+    val defaultTemplate = stringResource(R.string.template_default)
+    val templateExamples = stringArrayResource(R.array.template_examples)
     val dirty = text != saved
     val error = templateError(text)?.takeIf { it != TemplateError.EMPTY || showEmptyError }
     val tryBack = { if (dirty) confirmDiscard = true else onBack() }
@@ -111,8 +113,8 @@ fun TemplateEditorScreen(
                 UnderlineButton(stringResource(R.string.template_insert_name), onClick = {
                     val start = minOf(value.selection.start, value.selection.end)
                     val end = maxOf(value.selection.start, value.selection.end)
-                    val inserted = text.replaceRange(start, end, NAME_PLACEHOLDER)
-                    value = TextFieldValue(inserted, TextRange(start + NAME_PLACEHOLDER.length))
+                    val inserted = text.replaceRange(start, end, nameToken)
+                    value = TextFieldValue(inserted, TextRange(start + nameToken.length))
                 })
                 Text(
                     stringResource(R.string.template_count, templateLength(text), TEMPLATE_MAX_LENGTH),
@@ -124,7 +126,7 @@ fun TemplateEditorScreen(
                 )
             }
             Text(
-                stringResource(if (NAME_PLACEHOLDER in text || text.isBlank()) R.string.template_hint else R.string.template_no_name),
+                stringResource(if (hasNamePlaceholder(text) || text.isBlank()) R.string.template_hint else R.string.template_no_name),
                 style = MaterialTheme.typography.bodySmall,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.padding(horizontal = ScreenMargin).padding(bottom = 16.dp),
@@ -138,7 +140,7 @@ fun TemplateEditorScreen(
             modifier = Modifier.padding(horizontal = ScreenMargin).padding(top = 20.dp, bottom = 4.dp),
         )
         Column(Modifier.selectableGroup()) {
-            TEMPLATE_EXAMPLES.forEachIndexed { i, example ->
+            templateExamples.forEachIndexed { i, example ->
                 if (i > 0) RowRule()
                 Row(
                     Modifier
@@ -151,7 +153,7 @@ fun TemplateEditorScreen(
                     verticalAlignment = Alignment.CenterVertically,
                 ) {
                     Text(
-                        if (example == DEFAULT_TEMPLATE) "$example ${stringResource(R.string.template_default_suffix)}" else example,
+                        if (example == defaultTemplate) "$example ${stringResource(R.string.template_default_suffix)}" else example,
                         style = MaterialTheme.typography.bodyLarge,
                         modifier = Modifier.weight(1f),
                     )
@@ -192,7 +194,7 @@ fun TemplateEditorScreen(
             // Changes only the field; saving is still a separate step.
             UnderlineButton(
                 stringResource(R.string.template_reset),
-                onClick = { value = TextFieldValue(DEFAULT_TEMPLATE, TextRange(DEFAULT_TEMPLATE.length)) },
+                onClick = { value = TextFieldValue(defaultTemplate, TextRange(defaultTemplate.length)) },
             )
             PrimaryButton(stringResource(R.string.template_save), modifier = Modifier.weight(1f), onClick = {
                 if (templateError(text) == null) onSave(text) else showEmptyError = true

@@ -12,7 +12,7 @@ import android.view.accessibility.AccessibilityEvent
 import android.view.inputmethod.InputMethodManager
 import com.example.bourget.R
 import com.example.bourget.action.ConfirmOverlay
-import com.example.bourget.data.DEFAULT_TEMPLATE
+import com.example.bourget.data.AppLanguage
 import com.example.bourget.data.Rule
 import com.example.bourget.data.RuleAction
 import com.example.bourget.data.TargetAppsStore
@@ -46,7 +46,8 @@ class BourgetAccessibilityService : AccessibilityService() {
     private val launchGuard = LaunchGuard()
     private var appRules: Map<String, Rule> = emptyMap()
     private var websiteRules: Map<String, Rule> = emptyMap()
-    private var template = DEFAULT_TEMPLATE
+    /** The user's saved popup text; null for the default in the current language. */
+    private var savedTemplate: String? = null
     private var scope: CoroutineScope? = null
     private var ignoredPackages: Set<String> = emptySet()
     private var currentApp: String? = null
@@ -82,7 +83,7 @@ class BourgetAccessibilityService : AccessibilityService() {
                 }
             }
             launch { store.migrate() }
-            launch { store.confirmTemplate.collect { template = it } }
+            launch { store.savedTemplate.collect { savedTemplate = it } }
             launch {
                 store.appRules.collect { rules ->
                     appRules = rules.associateBy { it.target }
@@ -138,7 +139,7 @@ class BourgetAccessibilityService : AccessibilityService() {
             if (!launchInstead(appRules[pkg], now)) {
                 showConfirm(
                     key = "app:$pkg",
-                    title = applyTemplate(template, appLabel(pkg)),
+                    title = applyTemplate(template(), appLabel(pkg)),
                     icon = appIcon(pkg),
                     onGoBack = { performGlobalAction(GLOBAL_ACTION_HOME) },
                 )
@@ -189,7 +190,7 @@ class BourgetAccessibilityService : AccessibilityService() {
             if (launchInstead(rule?.let { websiteRules[it] }, now)) return
             showConfirm(
                 key = "web:${rule ?: host}",
-                title = applyTemplate(template, rule ?: host),
+                title = applyTemplate(template(), rule ?: host),
                 icon = getDrawable(R.drawable.ic_link)?.mutate()?.apply { setTint(LINK_ICON_TINT) },
                 // Back to the site the user came from; home when there is none to go back to.
                 onGoBack = { performGlobalAction(if (navigated) GLOBAL_ACTION_BACK else GLOBAL_ACTION_HOME) },
@@ -204,8 +205,8 @@ class BourgetAccessibilityService : AccessibilityService() {
         overlay.show(
             title = title,
             icon = icon,
-            note = if (continued == 0) getString(R.string.confirm_count, shown)
-            else getString(R.string.confirm_count_continued, shown, continued),
+            note = if (continued == 0) strings().getString(R.string.confirm_count, shown)
+            else strings().getString(R.string.confirm_count_continued, shown, continued),
             onGoBack = onGoBack,
             onContinue = { counts.onContinued(key) },
         )
@@ -227,6 +228,11 @@ class BourgetAccessibilityService : AccessibilityService() {
             false
         }
     }
+
+    /** Resources in the language chosen in Bourget's settings, read when needed so a change applies at once. */
+    private fun strings() = AppLanguage.localized(this).resources
+
+    private fun template(): String = savedTemplate ?: strings().getString(R.string.template_default)
 
     private fun appLabel(pkg: String): String = try {
         packageManager.getApplicationInfo(pkg, 0).loadLabel(packageManager).toString()

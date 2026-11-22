@@ -27,6 +27,7 @@ import androidx.core.content.res.ResourcesCompat
 import androidx.core.view.ViewCompat
 import androidx.core.widget.TextViewCompat
 import com.example.bourget.R
+import com.example.bourget.data.AppLanguage
 
 /**
  * A full-screen pause over the app being opened: the app underneath is almost covered and the
@@ -69,7 +70,8 @@ class ConfirmOverlay(private val service: AccessibilityService) {
     }
 
     private fun build(title: String, icon: Drawable?, note: String?, onChoice: (goBack: Boolean) -> Unit): View {
-        val context: Context = service
+        // The language chosen in Bourget's settings (see AppLanguage.localized).
+        val context: Context = AppLanguage.localized(service)
         val bold = ResourcesCompat.getFont(context, R.font.line_seed_kr_bold)
 
         val content = LinearLayout(context).apply {

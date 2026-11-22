@@ -45,9 +45,12 @@ class TargetAppsStore(context: Context) {
     val appRules: Flow<List<Rule>> = rules(RuleKind.APP)
     val websiteRules: Flow<List<Rule>> = rules(RuleKind.WEBSITE)
 
-    /** The confirm popup title template; the default when unset or no longer valid. */
-    val confirmTemplate: Flow<String> =
-        prefs.map { p -> p[CONFIRM_TEMPLATE]?.takeIf { templateError(it) == null } ?: DEFAULT_TEMPLATE }
+    /** The confirm popup title template the user saved; null when unset or no longer valid. */
+    val savedTemplate: Flow<String?> =
+        prefs.map { p -> p[CONFIRM_TEMPLATE]?.takeIf { templateError(it) == null } }
+
+    /** [savedTemplate], or [default] (the default text in the current language). */
+    fun confirmTemplate(default: String): Flow<String> = savedTemplate.map { it ?: default }
 
     suspend fun setConfirmTemplate(template: String) {
         dataStore.edit { it[CONFIRM_TEMPLATE] = template }

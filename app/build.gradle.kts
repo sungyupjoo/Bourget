@@ -56,6 +56,13 @@ android {
     buildFeatures {
         compose = true
     }
+    // The language can be changed in the app, so every language must be installed: Play must
+    // not split them out of the app bundle by the device's language.
+    bundle {
+        language {
+            enableSplit = false
+        }
+    }
 }
 
 dependencies {

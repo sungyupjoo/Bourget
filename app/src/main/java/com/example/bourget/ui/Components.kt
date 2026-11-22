@@ -35,9 +35,12 @@ import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
+import androidx.compose.foundation.selection.selectable
+import androidx.compose.ui.semantics.Role
 import com.example.bourget.R
 import com.example.bourget.data.LaunchableApp
 import com.example.bourget.data.Rule
+import com.example.bourget.ui.theme.LocalInactiveTab
 import com.example.bourget.data.RuleAction
 import com.example.bourget.data.RuleKind
 
@@ -214,4 +217,17 @@ fun EmptyState(title: String, body: String, modifier: Modifier = Modifier, actio
         Text(body, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
         action()
     }
+}
+
+/** A tab drawn as large type: the selected one in ink, the other in the inactive tab color. */
+@Composable
+fun TextTab(label: String, selected: Boolean, onClick: () -> Unit) {
+    Text(
+        label,
+        style = MaterialTheme.typography.headlineSmall,
+        color = if (selected) MaterialTheme.colorScheme.onSurface else LocalInactiveTab.current,
+        modifier = Modifier
+            .selectable(selected = selected, onClick = onClick, role = Role.Tab)
+            .padding(vertical = 6.dp),
+    )
 }

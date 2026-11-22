@@ -13,7 +13,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
@@ -46,6 +45,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
@@ -58,7 +58,6 @@ import com.example.bourget.data.TargetAppsStore
 import com.example.bourget.data.loadLaunchableApps
 import com.example.bourget.data.withAdded
 import com.example.bourget.data.withLaunch
-import com.example.bourget.ui.theme.LocalInactiveTab
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -134,7 +133,9 @@ fun MainScreen(
     val apps: AppDirectory = remember(appList) { appList?.associateBy { it.packageName } }
     val appRules by store.appRules.collectAsState(initial = null)
     val websiteRules by store.websiteRules.collectAsState(initial = null)
-    val template by store.confirmTemplate.collectAsState(initial = null)
+    // The default text follows the app language until the user saves one of their own.
+    val defaultTemplate = stringResource(R.string.template_default)
+    val template by remember(defaultTemplate) { store.confirmTemplate(defaultTemplate) }.collectAsState(initial = null)
     val backupEnabled by store.backupEnabled.collectAsState(initial = false)
 
     var stack by rememberSaveable { mutableStateOf(listOf(Route.Home.encode())) }
@@ -408,19 +409,6 @@ private fun AboutDialog(onDismiss: () -> Unit) {
     )
 }
 
-/** A tab drawn as large type: the selected one in ink, the other in the inactive tab color. */
-@Composable
-private fun TextTab(label: String, selected: Boolean, onClick: () -> Unit) {
-    Text(
-        label,
-        style = MaterialTheme.typography.headlineSmall,
-        color = if (selected) MaterialTheme.colorScheme.onSurface else LocalInactiveTab.current,
-        modifier = Modifier
-            .selectable(selected = selected, onClick = onClick, role = Role.Tab)
-            .padding(vertical = 6.dp),
-    )
-}
-
 /** The rule list. Header ("규칙 N개", "앱 추가") stays fixed above the ink rule; only rows scroll. */
 @Composable
 private fun AppRulesTab(
@@ -438,7 +426,7 @@ private fun AppRulesTab(
             verticalAlignment = Alignment.CenterVertically,
         ) {
             Text(
-                stringResource(R.string.rules_count, rules.orEmpty().size),
+                pluralStringResource(R.plurals.rules_count, rules.orEmpty().size, rules.orEmpty().size),
                 style = MaterialTheme.typography.bodyMedium,
                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                 modifier = Modifier.weight(1f),

@@ -1,6 +1,7 @@
 package com.example.bourget
 
 import android.content.ComponentName
+import android.content.Context
 import android.content.Intent
 import android.os.Bundle
 import android.provider.Settings
@@ -19,6 +20,7 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.lifecycle.lifecycleScope
+import com.example.bourget.data.AppLanguage
 import com.example.bourget.data.DISCLOSURE_VERSION
 import com.example.bourget.data.Rule
 import com.example.bourget.data.RuleKind
@@ -45,6 +47,10 @@ class MainActivity : ComponentActivity() {
     private var message by mutableStateOf<String?>(null)
     /** Set when the user is sent to turn the service on, so coming back can say it is on. */
     private var awaitingService by mutableStateOf(false)
+
+    override fun attachBaseContext(newBase: Context) {
+        super.attachBaseContext(AppLanguage.wrap(newBase))
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
