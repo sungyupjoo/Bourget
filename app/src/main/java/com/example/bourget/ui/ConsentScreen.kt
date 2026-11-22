@@ -41,6 +41,8 @@ enum class ConsentState {
 fun ConsentScreen(
     state: ConsentState,
     serviceEnabled: Boolean,
+    /** Sent to accessibility settings and back with the service still off. */
+    stillOff: Boolean,
     ruleCount: Int,
     onAgree: () -> Unit,
     onDecline: () -> Unit,
@@ -78,9 +80,9 @@ fun ConsentScreen(
                     )
                 }
                 ConsentState.SERVICE_OFF -> {
-                    ScreenTitle(stringResource(R.string.service_off_title))
+                    ScreenTitle(stringResource(if (stillOff) R.string.service_still_off_title else R.string.service_off_title))
                     InkRule(Modifier.padding(horizontal = ScreenMargin))
-                    Body(stringResource(R.string.service_off_body))
+                    Body(stringResource(if (stillOff) R.string.service_still_off_body else R.string.service_off_body))
                     Text(
                         boldStringResource(R.string.settings_path),
                         style = MaterialTheme.typography.bodyLarge,

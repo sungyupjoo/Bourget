@@ -133,6 +133,8 @@
     <string name="service_off_title">서비스 꺼짐</string>
     <string name="service_off_body">Bourget가 꺼져 있습니다. 서비스를 켜면 저장된 규칙이 적용됩니다.</string>
     <string name="settings_path">접근성 설정에서\n1. <b>설치된 앱</b>(또는 다운로드한 앱) 누르기\n2. <b>Bourget 앱 실행 알림</b> 누르기\n3. <b>맨 위 스위치</b> 켜기\n아래 \'바로가기\'는 켜지 않아도 됩니다.</string>
+    <string name="service_still_off_title">아직 꺼져 있습니다</string>
+    <string name="service_still_off_body">Bourget 앱 실행 알림 화면의 맨 위 스위치를 켜야 합니다. \'바로가기\'를 켰다면 다시 꺼도 됩니다.</string>
     <string name="service_off_rules">저장된 규칙: %1$d개</string>
     <string name="review_disclosure">안내 다시 보기</string>
     <string name="declined_title">동의하지 않음</string>

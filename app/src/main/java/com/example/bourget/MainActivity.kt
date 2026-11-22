@@ -44,7 +44,7 @@ class MainActivity : ComponentActivity() {
     /** One-time snackbar for the main screen. */
     private var message by mutableStateOf<String?>(null)
     /** Set when the user is sent to turn the service on, so coming back can say it is on. */
-    private var awaitingService = false
+    private var awaitingService by mutableStateOf(false)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -82,6 +82,7 @@ class MainActivity : ComponentActivity() {
                             ConsentScreen(
                                 state = state,
                                 serviceEnabled = serviceEnabled,
+                                stillOff = awaitingService,
                                 ruleCount = appRules.size + websiteRules.size,
                                 onAgree = {
                                     lifecycleScope.launch {
