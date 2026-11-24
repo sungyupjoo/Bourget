@@ -2,11 +2,17 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:tools="http://schemas.android.com/tools">
 
-    <!-- Package visibility (Android 11+): only apps with a launcher icon, no QUERY_ALL_PACKAGES. -->
+    <!-- Package visibility (Android 11+): only apps with a launcher icon, and the home screen app
+         (so coming back through it to an app is not taken as using another app).
+         No QUERY_ALL_PACKAGES. -->
     <queries>
         <intent>
             <action android:name="android.intent.action.MAIN" />
             <category android:name="android.intent.category.LAUNCHER" />
+        </intent>
+        <intent>
+            <action android:name="android.intent.action.MAIN" />
+            <category android:name="android.intent.category.HOME" />
         </intent>
     </queries>
 
