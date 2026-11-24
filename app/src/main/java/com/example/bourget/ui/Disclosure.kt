@@ -27,20 +27,15 @@ import com.example.bourget.R
 
 /**
  * The in-app disclosure (Play Accessibility API / User Data policy): what the service reads and
- * what it never does. [highlightIntro] sets the first sentence, which changed in version 3, in
- * bold for users asked to agree again.
+ * what it never does.
  */
 @Composable
 fun DisclosureText(
     modifier: Modifier = Modifier,
     style: TextStyle = MaterialTheme.typography.bodyLarge,
-    highlightIntro: Boolean = false,
 ) {
     Column(modifier, verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text(
-            stringResource(R.string.disclosure_intro),
-            style = if (highlightIntro) style.copy(fontWeight = FontWeight.Bold) else style,
-        )
+        Text(stringResource(R.string.disclosure_intro), style = style)
         Text(stringResource(R.string.disclosure_reads_title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))
         Text(stringResource(R.string.disclosure_reads), style = style)
         Text(stringResource(R.string.disclosure_never_title), style = MaterialTheme.typography.titleMedium, modifier = Modifier.padding(top = 8.dp))

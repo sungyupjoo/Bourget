@@ -29,7 +29,7 @@ enum class ConsentState {
     /** Agreed, but the service is off in system settings. */
     SERVICE_OFF,
 
-    /** Tapped "동의하지 않음". Nothing is recorded; the disclosure can be reviewed again. */
+    /** Tapped "Don't agree". Nothing is recorded; the disclosure can be reviewed again. */
     DECLINED,
 }
 
@@ -72,7 +72,7 @@ fun ConsentScreen(
                     }
                     ScreenTitle(stringResource(R.string.main_disclosure_title))
                     InkRule(Modifier.padding(horizontal = ScreenMargin))
-                    DisclosureText(Modifier.padding(horizontal = ScreenMargin), highlightIntro = state == ConsentState.RECONSENT)
+                    DisclosureText(Modifier.padding(horizontal = ScreenMargin))
                     UnderlineButton(
                         stringResource(R.string.privacy_policy_open),
                         onClick = { showPrivacy = true },
@@ -111,12 +111,7 @@ fun ConsentScreen(
                 ConsentState.FIRST, ConsentState.RECONSENT -> {
                     // With the service already on there is nothing to turn on in settings.
                     if (!serviceEnabled) {
-                        Text(
-                            boldStringResource(R.string.settings_path),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            modifier = Modifier.padding(bottom = 8.dp),
-                        )
+                        SecondaryText(boldStringResource(R.string.settings_path), Modifier.padding(bottom = 8.dp))
                     }
                     PrimaryButton(
                         stringResource(if (serviceEnabled) R.string.consent_agree_continue else R.string.main_open_settings),

@@ -111,11 +111,9 @@ fun WebsiteRulesTab(
             Modifier.fillMaxWidth().padding(start = ScreenMargin, end = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
         ) {
-            Text(
+            SecondaryText(
                 pluralStringResource(R.plurals.rules_count, rules.orEmpty().size, rules.orEmpty().size),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.weight(1f),
+                Modifier.weight(1f),
             )
             UnderlineButton(
                 stringResource(if (showDetail) R.string.website_notice_less else R.string.website_notice_more),

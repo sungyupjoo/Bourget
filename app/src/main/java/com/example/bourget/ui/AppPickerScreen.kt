@@ -35,12 +35,13 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import com.example.bourget.R
 import com.example.bourget.data.LaunchableApp
+import com.example.bourget.data.matching
 import com.example.bourget.data.RECOMMENDED_PACKAGES
 import com.example.bourget.data.Rule
 import com.example.bourget.data.RuleAction
@@ -68,7 +69,7 @@ fun AppPickerScreen(
     var query by rememberSaveable { mutableStateOf("") }
     val scope = rememberCoroutineScope()
     val selected = rules.map { it.target }.toSet()
-    val releasedText = stringResource(R.string.rule_released, "%s")
+    val context = LocalContext.current
     val recommendedReleased = stringResource(R.string.recommended_released)
 
     val toggle: (LaunchableApp) -> Unit = { app ->
@@ -80,7 +81,7 @@ fun AppPickerScreen(
             scope.launch { store.removeRule(RuleKind.APP, app.packageName) }
             // Losing a "launch another app" setting is easy to regret, so it can be undone.
             if (removed.action == RuleAction.LAUNCH) {
-                showSnackbar(releasedText.format(app.label)) {
+                showSnackbar(context.getString(R.string.rule_released, app.label)) {
                     scope.launch { store.editRules(RuleKind.APP) { it.withAdded(removed, index) } }
                 }
             }
@@ -112,41 +113,23 @@ fun AppPickerScreen(
             UnderlineButton(stringResource(R.string.picker_done), onClick = onDone)
         }
         ScreenTitle(stringResource(R.string.picker_title))
-        CompactTextField(
-            value = query,
-            onValueChange = { query = it },
-            placeholder = stringResource(R.string.apps_search),
-            trailingIcon = {
-                if (query.isNotEmpty()) {
-                    Icon(
-                        Icons.Default.Clear,
-                        contentDescription = stringResource(R.string.apps_search_clear),
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .clickable { query = "" }
-                            .padding(6.dp)
-                            .size(20.dp),
-                    )
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = ScreenMargin, vertical = 8.dp),
+        AppSearchField(
+            query = query,
+            onQueryChange = { query = it },
+            modifier = Modifier.fillMaxWidth().padding(horizontal = ScreenMargin, vertical = 8.dp),
         )
         // Chips follow rule order (newest first) and only show installed apps.
         val byPackage = apps.orEmpty().associateBy { it.packageName }
         SelectedChips(rules.mapNotNull { byPackage[it.target] }, onRemove = toggle)
-        AppList(apps, recommended, selected, query.trim(), toggle, setAllRecommended, Modifier.weight(1f))
+        AppList(apps, recommended, selected, query, toggle, setAllRecommended, Modifier.weight(1f))
     }
 }
 
 @Composable
 private fun SelectedChips(apps: List<LaunchableApp>, onRemove: (LaunchableApp) -> Unit) {
-    Text(
+    SecondaryText(
         if (apps.isEmpty()) stringResource(R.string.chips_empty) else stringResource(R.string.chips_count, apps.size),
-        style = MaterialTheme.typography.bodyMedium,
-        color = MaterialTheme.colorScheme.onSurfaceVariant,
-        modifier = Modifier.padding(horizontal = ScreenMargin),
+        Modifier.padding(horizontal = ScreenMargin),
     )
     val listState = rememberLazyListState()
     // A newly selected app appears first; bring it into view.
@@ -200,17 +183,10 @@ private fun AppList(
     modifier: Modifier = Modifier,
 ) {
     if (apps == null) {
-        Text(
-            stringResource(R.string.apps_loading),
-            modifier = modifier.padding(horizontal = ScreenMargin, vertical = 16.dp),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        SecondaryText(stringResource(R.string.apps_loading), modifier.padding(horizontal = ScreenMargin, vertical = 16.dp))
         return
     }
-    val visible = if (query.isEmpty()) apps else apps.filter {
-        it.label.contains(query, ignoreCase = true) || it.packageName.contains(query, ignoreCase = true)
-    }
+    val visible = apps.matching(query)
     LazyColumn(modifier = modifier.fillMaxSize()) {
         if (visible.isEmpty()) {
             item {
@@ -218,7 +194,7 @@ private fun AppList(
             }
         }
         // Recommended apps first, only without a search. An app in both sections toggles in both.
-        if (query.isEmpty() && recommended.isNotEmpty()) {
+        if (query.isBlank() && recommended.isNotEmpty()) {
             item(key = "recommended") {
                 val allSelected = recommended.all { it.packageName in selected }
                 SectionHeader(stringResource(R.string.section_recommended)) {

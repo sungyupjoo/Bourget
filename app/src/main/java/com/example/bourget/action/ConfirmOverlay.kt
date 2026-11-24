@@ -9,6 +9,7 @@ import android.graphics.drawable.Drawable
 import android.graphics.drawable.GradientDrawable
 import android.graphics.drawable.RippleDrawable
 import android.graphics.Paint
+import android.graphics.Typeface
 import android.util.TypedValue
 import android.view.Gravity
 import android.view.KeyEvent
@@ -116,9 +117,9 @@ class ConfirmOverlay(private val service: AccessibilityService) {
         }
         // Screen readers start on the question, then reach the two buttons.
         question.post { question.performAccessibilityAction(AccessibilityNodeInfo.ACTION_ACCESSIBILITY_FOCUS, null) }
-        content.addView(button(context, R.string.confirm_go_back, filled = true) { onChoice(true) },
+        content.addView(button(context, bold, R.string.confirm_go_back, filled = true) { onChoice(true) },
             LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT))
-        content.addView(button(context, R.string.confirm_continue, filled = false) { onChoice(false) },
+        content.addView(button(context, bold, R.string.confirm_continue, filled = false) { onChoice(false) },
             LinearLayout.LayoutParams(MATCH_PARENT, WRAP_CONTENT).apply { topMargin = dp(4) })
 
         // Not cancelable: BACK neither closes the pause nor reaches the app underneath.
@@ -140,11 +141,11 @@ class ConfirmOverlay(private val service: AccessibilityService) {
         }
     }
 
-    private fun button(context: Context, text: Int, filled: Boolean, onClick: () -> Unit) = Button(context).apply {
+    private fun button(context: Context, bold: Typeface?, text: Int, filled: Boolean, onClick: () -> Unit) = Button(context).apply {
         setText(text)
         isAllCaps = false
         stateListAnimator = null
-        typeface = ResourcesCompat.getFont(context, R.font.line_seed_kr_bold)
+        typeface = bold
         setTextSize(TypedValue.COMPLEX_UNIT_SP, 16f)
         minHeight = dp(if (filled) 56 else 48)
         minimumHeight = minHeight
@@ -168,11 +169,12 @@ class ConfirmOverlay(private val service: AccessibilityService) {
     private fun sp(value: Int) =
         TypedValue.applyDimension(TypedValue.COMPLEX_UNIT_SP, value.toFloat(), service.resources.displayMetrics).toInt()
 
-    private companion object {
-        val SCRIM = 0xF2141312.toInt()
-        val INK = 0xFF141312.toInt()
-        val PAPER = 0xFFF4F1EC.toInt()
-        val PAPER_VARIANT = 0xFFBDB7AE.toInt()
-        const val FADE_IN_MILLIS = 150L
+    companion object {
+        private const val SCRIM = 0xF2141312.toInt()
+        private const val INK = 0xFF141312.toInt()
+        private const val PAPER = 0xFFF4F1EC.toInt()
+        /** The popup's secondary text color; also tints icons drawn on it, such as the link icon. */
+        const val PAPER_VARIANT = 0xFFBDB7AE.toInt()
+        private const val FADE_IN_MILLIS = 150L
     }
 }

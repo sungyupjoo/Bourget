@@ -82,7 +82,6 @@ class BourgetAccessibilityService : AccessibilityService() {
                     }
                 }
             }
-            launch { store.migrate() }
             launch { store.savedTemplate.collect { savedTemplate = it } }
             launch {
                 store.appRules.collect { rules ->
@@ -191,7 +190,7 @@ class BourgetAccessibilityService : AccessibilityService() {
             showConfirm(
                 key = "web:${rule ?: host}",
                 title = applyTemplate(template(), rule ?: host),
-                icon = getDrawable(R.drawable.ic_link)?.mutate()?.apply { setTint(LINK_ICON_TINT) },
+                icon = getDrawable(R.drawable.ic_link)?.mutate()?.apply { setTint(ConfirmOverlay.PAPER_VARIANT) },
                 // Back to the site the user came from; home when there is none to go back to.
                 onGoBack = { performGlobalAction(if (navigated) GLOBAL_ACTION_BACK else GLOBAL_ACTION_HOME) },
             )
@@ -266,8 +265,6 @@ class BourgetAccessibilityService : AccessibilityService() {
 
     private companion object {
         const val SYSTEM_UI_PACKAGE = "com.android.systemui"
-        // The popup's secondary text color, so the link icon reads on its dark background.
-        const val LINK_ICON_TINT = 0xFFBDB7AE.toInt()
         const val URL_CHECK_DEBOUNCE_MS = 300L
         const val URL_CHECK_MAX_DELAY_MS = 1_000L
     }

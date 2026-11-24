@@ -42,7 +42,7 @@ import com.example.bourget.R
 import com.example.bourget.data.AppLanguage
 import com.example.bourget.data.NAME_PLACEHOLDERS
 
-/** Settings in two tabs: 일반 (language, popup text, backup) and 정보 (licenses, source, version). */
+/** Settings in two tabs: General (language, popup text, backup) and About (licenses, source, version). */
 @Composable
 fun SettingsScreen(
     template: String,
@@ -92,11 +92,7 @@ private fun GeneralSettings(
     }
     RowRule()
     SettingRow(stringResource(R.string.settings_template), onClick = onEditTemplate) {
-        Text(
-            templateWithNameChip(template),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-        )
+        SecondaryText(templateWithNameChip(template))
     }
     RowRule()
     // The switch sits beside the title only; the description runs the full width below.
@@ -205,11 +201,6 @@ fun templateWithNameChip(template: String): AnnotatedString {
         }
         append(rest)
     }
-}
-
-@Composable
-private fun SecondaryText(text: String) {
-    Text(text, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
 }
 
 @Composable

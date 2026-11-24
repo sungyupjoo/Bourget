@@ -1,21 +1,15 @@
 package com.example.bourget.ui
 
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.foundation.selection.selectableGroup
-import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Clear
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.RadioButton
 import androidx.compose.material3.Text
@@ -26,12 +20,12 @@ import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
 import com.example.bourget.R
 import com.example.bourget.data.LaunchableApp
+import com.example.bourget.data.matching
 import com.example.bourget.data.RuleKind
 
 /**
@@ -53,48 +47,20 @@ fun LaunchPickerScreen(
     Column(modifier) {
         BackBar(onBack)
         ScreenTitle(stringResource(R.string.launch_picker_title))
-        Text(
+        SecondaryText(
             stringResource(if (kind == RuleKind.APP) R.string.launch_picker_desc_app else R.string.launch_picker_desc_website),
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(horizontal = ScreenMargin, vertical = 8.dp),
+            Modifier.padding(horizontal = ScreenMargin, vertical = 8.dp),
         )
-        CompactTextField(
-            value = query,
-            onValueChange = { query = it },
-            placeholder = stringResource(R.string.apps_search),
-            trailingIcon = {
-                if (query.isNotEmpty()) {
-                    Icon(
-                        Icons.Default.Clear,
-                        contentDescription = stringResource(R.string.apps_search_clear),
-                        modifier = Modifier
-                            .clip(CircleShape)
-                            .clickable { query = "" }
-                            .padding(6.dp)
-                            .size(20.dp),
-                    )
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = ScreenMargin)
-                .padding(bottom = 8.dp),
+        AppSearchField(
+            query = query,
+            onQueryChange = { query = it },
+            modifier = Modifier.fillMaxWidth().padding(horizontal = ScreenMargin).padding(bottom = 8.dp),
         )
         if (apps == null) {
-            Text(
-                stringResource(R.string.apps_loading),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(horizontal = ScreenMargin, vertical = 16.dp),
-            )
+            SecondaryText(stringResource(R.string.apps_loading), Modifier.padding(horizontal = ScreenMargin, vertical = 16.dp))
             return@Column
         }
-        val q = query.trim()
-        val visible = apps.filter {
-            it.packageName != ruleTarget &&
-                (q.isEmpty() || it.label.contains(q, ignoreCase = true) || it.packageName.contains(q, ignoreCase = true))
-        }
+        val visible = apps.matching(query).filter { it.packageName != ruleTarget }
         LazyColumn(Modifier.fillMaxSize().selectableGroup()) {
             if (visible.isEmpty()) {
                 item { EmptyState(stringResource(R.string.search_empty_title), stringResource(R.string.search_empty_body)) }

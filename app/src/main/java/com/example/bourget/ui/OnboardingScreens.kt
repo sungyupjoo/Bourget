@@ -86,12 +86,7 @@ fun RecommendScreen(onDone: (List<String>) -> Unit, modifier: Modifier = Modifie
         }
         val list = apps
         if (list == null) {
-            Text(
-                stringResource(R.string.apps_loading),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.weight(1f).padding(horizontal = ScreenMargin),
-            )
+            SecondaryText(stringResource(R.string.apps_loading), Modifier.weight(1f).padding(horizontal = ScreenMargin))
         } else {
             val allSelected = list.all { it.packageName in selected }
             SectionHeader(pluralStringResource(R.plurals.recommend_section, list.size, list.size)) {

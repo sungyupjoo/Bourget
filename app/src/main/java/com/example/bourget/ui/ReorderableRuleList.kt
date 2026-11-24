@@ -39,7 +39,7 @@ import kotlinx.coroutines.launch
  * The rule list of the apps and websites tabs. Long-press a row and drag to change the order;
  * the other rows slide aside and the list scrolls near its edges. The order is kept on screen
  * while dragging and saved once ([onReorder]) when the row is dropped. Screen readers get
- * "위로 이동" and "아래로 이동" actions instead.
+ * "Move up" and "Move down" actions instead.
  */
 @OptIn(ExperimentalFoundationApi::class)
 @Composable

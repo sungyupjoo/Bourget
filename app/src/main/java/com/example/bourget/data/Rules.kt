@@ -70,11 +70,3 @@ fun decodeRules(text: String): List<Rule> = text.lineSequence().mapNotNull { lin
     val launch = fields.getOrNull(3)?.takeIf { it.isNotEmpty() }
     Rule(target, enabled = fields.getOrNull(1) != "0").withLaunch(if (action == RuleAction.LAUNCH) launch else null)
 }.distinctBy { it.target }.toList()
-
-/** Rules from the version 1 keys: every selected app, enabled, showing the confirm popup. */
-fun legacyAppRules(targetPackages: Set<String>?): List<Rule> =
-    targetPackages.orEmpty().sorted().map { Rule(it) }
-
-/** Rules from the version 1 keys: a domain in [disabled] becomes a disabled rule. */
-fun legacyWebsiteRules(domains: Set<String>?, disabled: Set<String>?): List<Rule> =
-    domains.orEmpty().sorted().map { Rule(it, enabled = it !in disabled.orEmpty()) }

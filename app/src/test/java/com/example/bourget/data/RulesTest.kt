@@ -60,14 +60,4 @@ class RulesTest {
         val sites = listOf(Rule("namu.wiki").withLaunch(anki))
         assertEquals(listOf(Rule("namu.wiki")), sites.retainInstalled(RuleKind.WEBSITE, setOf(yt)))
     }
-
-    @Test
-    fun legacyKeysMigrate() {
-        assertEquals(listOf(Rule(yt), Rule(ig)).sortedBy { it.target }, legacyAppRules(setOf(yt, ig)))
-        assertEquals(emptyList<Rule>(), legacyAppRules(null))
-        assertEquals(
-            listOf(Rule("mania.kr", enabled = false), Rule("namu.wiki")),
-            legacyWebsiteRules(setOf("namu.wiki", "mania.kr"), setOf("mania.kr")),
-        )
-    }
 }

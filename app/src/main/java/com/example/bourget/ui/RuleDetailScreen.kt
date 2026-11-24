@@ -38,8 +38,9 @@ import com.example.bourget.data.applyTemplate
 
 /**
  * One rule: on/off, what happens when its app or site opens, and deletion. Changes are saved at
- * once. Choosing "다른 앱 실행" without an app to launch goes straight to the launch picker; the
- * rule stays on "확인 창 표시" until an app is picked. "규칙 삭제" sits at the right end of the icon row.
+ * once. Choosing "Open another app" without an app to launch goes straight to the launch picker;
+ * the rule stays on "Show popup" until an app is picked. "Delete rule" sits at the right end of the
+ * icon row.
  */
 @Composable
 fun RuleDetailScreen(
@@ -76,11 +77,7 @@ fun RuleDetailScreen(
                     )
                 }
                 Text(name, style = MaterialTheme.typography.headlineSmall)
-                Text(
-                    if (kind == RuleKind.APP) rule.target else stringResource(R.string.rule_subdomains),
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant,
-                )
+                SecondaryText(if (kind == RuleKind.APP) rule.target else stringResource(R.string.rule_subdomains))
             }
             Row(
                 Modifier

@@ -12,7 +12,9 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.Button
 import androidx.compose.material3.HorizontalDivider
@@ -26,10 +28,12 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.text.AnnotatedString
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextDecoration
 import androidx.compose.ui.text.style.TextOverflow
@@ -146,7 +150,7 @@ fun RuleIcon(kind: RuleKind, target: String, apps: AppDirectory, size: Dp, modif
     }
 }
 
-/** "확인 창" or "→ {app} 실행", prefixed with "꺼짐 · " when the rule is off. */
+/** "Popup" or "→ Open {app}", prefixed with "Off · " when the rule is off. */
 @Composable
 fun ruleSummary(rule: Rule, apps: AppDirectory): String {
     val launch = rule.launchPackage
@@ -191,11 +195,7 @@ fun RuleRow(
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis,
             )
-            Text(
-                ruleSummary(rule, apps),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-            )
+            SecondaryText(ruleSummary(rule, apps))
         }
         Switch(
             checked = rule.enabled,
@@ -206,6 +206,41 @@ fun RuleRow(
     }
 }
 
+/** Gray supporting text: descriptions, counts, values under a title. */
+@Composable
+fun SecondaryText(text: String, modifier: Modifier = Modifier) {
+    Text(text, modifier, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+}
+
+@Composable
+fun SecondaryText(text: AnnotatedString, modifier: Modifier = Modifier) {
+    Text(text, modifier, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+}
+
+/** Search box for the app lists, with a clear button once something is typed. */
+@Composable
+fun AppSearchField(query: String, onQueryChange: (String) -> Unit, modifier: Modifier = Modifier) {
+    CompactTextField(
+        value = query,
+        onValueChange = onQueryChange,
+        placeholder = stringResource(R.string.apps_search),
+        trailingIcon = {
+            if (query.isNotEmpty()) {
+                Icon(
+                    Icons.Default.Clear,
+                    contentDescription = stringResource(R.string.apps_search_clear),
+                    modifier = Modifier
+                        .clip(CircleShape)
+                        .clickable { onQueryChange("") }
+                        .padding(6.dp)
+                        .size(20.dp),
+                )
+            }
+        },
+        modifier = modifier,
+    )
+}
+
 /** Centered message for an empty list or search, with an optional action below it. */
 @Composable
 fun EmptyState(title: String, body: String, modifier: Modifier = Modifier, action: @Composable () -> Unit = {}) {
@@ -214,7 +249,7 @@ fun EmptyState(title: String, body: String, modifier: Modifier = Modifier, actio
         verticalArrangement = Arrangement.spacedBy(8.dp),
     ) {
         Text(title, style = MaterialTheme.typography.titleMedium)
-        Text(body, style = MaterialTheme.typography.bodyMedium, color = MaterialTheme.colorScheme.onSurfaceVariant)
+        SecondaryText(body)
         action()
     }
 }

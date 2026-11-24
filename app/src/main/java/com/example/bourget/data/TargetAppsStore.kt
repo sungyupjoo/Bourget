@@ -1,14 +1,12 @@
 package com.example.bourget.data
 
 import android.content.Context
-import androidx.datastore.preferences.core.MutablePreferences
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.emptyPreferences
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
-import androidx.datastore.preferences.core.stringSetPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.catch
@@ -20,11 +18,9 @@ private val Context.settingsDataStore by preferencesDataStore(name = "settings")
 /**
  * Version of the in-app disclosure (what the service reads and stores). Bump it whenever that
  * changes: every user must then agree again before the service processes anything.
- * 1: app package names only (never recorded). 2: adds the browser address bar.
- * 3: may open another app; stores each rule's action and app to launch, and the popup template.
- * 4: optional backup of the rules and popup text to the user's Google account.
+ * 1: first release (app package names, the browser address bar, optional backup).
  */
-const val DISCLOSURE_VERSION = 4
+const val DISCLOSURE_VERSION = 1
 
 /**
  * Stores only what the user made: app and website rules (target, on/off, action, app to launch),
@@ -39,7 +35,7 @@ class TargetAppsStore(context: Context) {
     private val prefs: Flow<Preferences> = dataStore.data
         .catch { if (it is IOException) emit(emptyPreferences()) else throw it }
 
-    /** Rules in screen order (newest first). Reads the version 1 keys until they are migrated. */
+    /** Rules in screen order (newest first). */
     fun rules(kind: RuleKind): Flow<List<Rule>> = prefs.map { it.rules(kind) }
 
     val appRules: Flow<List<Rule>> = rules(RuleKind.APP)
@@ -63,11 +59,8 @@ class TargetAppsStore(context: Context) {
     val consentedToCurrentDisclosure: Flow<Boolean> =
         prefs.map { (it[CONSENT_VERSION] ?: 0) >= DISCLOSURE_VERSION }
 
-    /** True once the intro and recommended apps were seen, or the user already had rules. */
-    val introDone: Flow<Boolean> = prefs.map { p ->
-        p[INTRO_DONE] ?: (p.rules(RuleKind.APP).isNotEmpty() || p.rules(RuleKind.WEBSITE).isNotEmpty() ||
-            (p[CONSENT_VERSION] ?: 0) > 0)
-    }
+    /** True once the intro and recommended apps were seen. */
+    val introDone: Flow<Boolean> = prefs.map { it[INTRO_DONE] ?: false }
 
     suspend fun recordConsent() {
         dataStore.edit { it[CONSENT_VERSION] = DISCLOSURE_VERSION }
@@ -89,16 +82,8 @@ class TargetAppsStore(context: Context) {
         dataStore.edit { it[INTRO_DONE] = true }
     }
 
-    /** Moves rules from the version 1 keys to the new ones and deletes the old keys. */
-    suspend fun migrate() {
-        dataStore.edit { it.migrate() }
-    }
-
     suspend fun editRules(kind: RuleKind, transform: (List<Rule>) -> List<Rule>) {
-        dataStore.edit { prefs ->
-            prefs.migrate()
-            prefs[kind.key] = encodeRules(transform(prefs.rules(kind)))
-        }
+        dataStore.edit { prefs -> prefs[kind.key] = encodeRules(transform(prefs.rules(kind))) }
     }
 
     /** Adds an enabled "confirm" rule for [target] at the top, unless it already has one. */
@@ -118,7 +103,6 @@ class TargetAppsStore(context: Context) {
      */
     suspend fun retainOnly(installed: Set<String>) {
         dataStore.edit { prefs ->
-            prefs.migrate()
             for (kind in RuleKind.entries) {
                 val current = prefs.rules(kind)
                 val kept = current.retainInstalled(kind, installed)
@@ -130,23 +114,7 @@ class TargetAppsStore(context: Context) {
     private val RuleKind.key
         get() = if (this == RuleKind.APP) APP_RULES else WEBSITE_RULES
 
-    private fun Preferences.rules(kind: RuleKind): List<Rule> = this[kind.key]?.let(::decodeRules)
-        ?: when (kind) {
-            RuleKind.APP -> legacyAppRules(this[TARGET_PACKAGES])
-            RuleKind.WEBSITE -> legacyWebsiteRules(this[WEBSITE_DOMAINS], this[WEBSITE_DISABLED])
-        }
-
-    private fun MutablePreferences.migrate() {
-        if (TARGET_PACKAGES in this || WEBSITE_DOMAINS in this || WEBSITE_DISABLED in this) {
-            // Users from version 1 already set up their rules, so they skip the intro.
-            if (this[INTRO_DONE] == null) this[INTRO_DONE] = true
-        }
-        if (this[APP_RULES] == null) this[APP_RULES] = encodeRules(rules(RuleKind.APP))
-        if (this[WEBSITE_RULES] == null) this[WEBSITE_RULES] = encodeRules(rules(RuleKind.WEBSITE))
-        remove(TARGET_PACKAGES)
-        remove(WEBSITE_DOMAINS)
-        remove(WEBSITE_DISABLED)
-    }
+    private fun Preferences.rules(kind: RuleKind): List<Rule> = this[kind.key]?.let(::decodeRules).orEmpty()
 
     private companion object {
         val APP_RULES = stringPreferencesKey("app_rules")
@@ -155,10 +123,5 @@ class TargetAppsStore(context: Context) {
         val INTRO_DONE = booleanPreferencesKey("intro_done")
         val BACKUP_ENABLED = booleanPreferencesKey("backup_enabled")
         val CONSENT_VERSION = intPreferencesKey("consent_version")
-
-        // Version 1 keys, read only to migrate.
-        val TARGET_PACKAGES = stringSetPreferencesKey("target_packages")
-        val WEBSITE_DOMAINS = stringSetPreferencesKey("website_domains")
-        val WEBSITE_DISABLED = stringSetPreferencesKey("website_disabled")
     }
 }

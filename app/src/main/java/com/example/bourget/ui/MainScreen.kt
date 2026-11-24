@@ -5,7 +5,6 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -17,7 +16,6 @@ import androidx.compose.foundation.selection.selectableGroup
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Settings
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -27,8 +25,6 @@ import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.SnackbarResult
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
-import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -45,11 +41,9 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.painterResource
-import androidx.compose.ui.res.pluralStringResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.example.bourget.R
 import com.example.bourget.data.LaunchableApp
 import com.example.bourget.data.Rule
@@ -102,13 +96,13 @@ private fun decodeRoute(text: String): Route {
     }
 }
 
-/** Shows [text] with an optional "실행 취소" that runs [undo]. */
+/** Shows [text] with an optional "Undo" that runs [undo]. */
 typealias ShowSnackbar = (text: String, undo: (() -> Unit)?) -> Unit
 
 /**
  * Shown while consent is given and the service is on. Loads installed apps once per resume
  * ([refreshKey]) for icons and names, and owns the back stack and snackbar for every screen
- * below it. [message] is a one-time snackbar from the activity (e.g. "Bourget 켜짐").
+ * below it. [message] is a one-time snackbar from the activity (e.g. "Bourget is on").
  */
 @Composable
 fun MainScreen(
@@ -363,94 +357,4 @@ private fun HomeScreen(
         )
     }
     if (showAbout) AboutDialog(onDismiss = { showAbout = false })
-}
-
-/** Logo tap: what Bourget is for, under the Paul Bourget line it is named after. */
-@Composable
-private fun AboutDialog(onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        icon = {
-            Icon(
-                painterResource(R.drawable.ic_bourget),
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.size(width = 32.dp, height = 40.dp),
-            )
-        },
-        title = { Text(stringResource(R.string.app_name)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                // A blockquote: an ink bar down the left, the line, then the attribution.
-                Row(Modifier.height(IntrinsicSize.Min)) {
-                    VerticalDivider(thickness = 2.dp, color = MaterialTheme.colorScheme.onSurface)
-                    Column(
-                        Modifier.padding(start = 14.dp, top = 2.dp, bottom = 2.dp),
-                        verticalArrangement = Arrangement.spacedBy(8.dp),
-                    ) {
-                        Text(
-                            stringResource(R.string.about_quote),
-                            style = MaterialTheme.typography.titleMedium.copy(lineHeight = 26.sp),
-                            color = MaterialTheme.colorScheme.onSurface,
-                        )
-                        Text(
-                            stringResource(R.string.about_quote_author),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                        )
-                    }
-                }
-                Text(stringResource(R.string.about_body), style = MaterialTheme.typography.bodyMedium)
-            }
-        },
-        confirmButton = {
-            TextButton(onClick = onDismiss) { Text(stringResource(R.string.info_close)) }
-        },
-    )
-}
-
-/** The rule list. Header ("규칙 N개", "앱 추가") stays fixed above the ink rule; only rows scroll. */
-@Composable
-private fun AppRulesTab(
-    apps: AppDirectory,
-    rules: List<Rule>?,
-    onAddApp: () -> Unit,
-    onOpenRule: (String) -> Unit,
-    onEnabledChange: (Rule, Boolean) -> Unit,
-    onReorder: (List<String>) -> Unit,
-    modifier: Modifier = Modifier,
-) {
-    Column(modifier) {
-        Row(
-            Modifier.fillMaxWidth().padding(start = ScreenMargin, end = 12.dp, top = 8.dp),
-            verticalAlignment = Alignment.CenterVertically,
-        ) {
-            Text(
-                pluralStringResource(R.plurals.rules_count, rules.orEmpty().size, rules.orEmpty().size),
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.weight(1f),
-            )
-            UnderlineButton(stringResource(R.string.app_add), onClick = onAddApp)
-        }
-        InkRule(Modifier.padding(horizontal = ScreenMargin))
-        when {
-            rules == null -> Unit
-            rules.isEmpty() -> EmptyState(
-                stringResource(R.string.rules_empty_title),
-                stringResource(R.string.rules_empty_apps),
-            ) {
-                PrimaryButton(stringResource(R.string.app_add), onClick = onAddApp, modifier = Modifier.padding(top = 16.dp))
-            }
-            else -> ReorderableRuleList(
-                kind = RuleKind.APP,
-                rules = rules,
-                apps = apps,
-                nameOf = { apps.label(it.target) },
-                onEnabledChange = onEnabledChange,
-                onOpenRule = { onOpenRule(it.target) },
-                onReorder = onReorder,
-            )
-        }
-    }
 }

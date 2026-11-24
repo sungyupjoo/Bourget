@@ -28,3 +28,10 @@ fun loadLaunchableApps(context: Context, iconSizePx: Int): List<LaunchableApp> {
         }
         .sortedBy { it.label.lowercase() }
 }
+
+/** Apps whose name or package name contains [query]; all of them for a blank query. */
+fun List<LaunchableApp>.matching(query: String): List<LaunchableApp> {
+    val q = query.trim()
+    if (q.isEmpty()) return this
+    return filter { it.label.contains(q, ignoreCase = true) || it.packageName.contains(q, ignoreCase = true) }
+}
