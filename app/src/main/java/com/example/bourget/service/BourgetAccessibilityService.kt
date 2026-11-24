@@ -37,6 +37,7 @@ import kotlinx.coroutines.launch
  * just its host. Page content is never read, and nothing read from the screen is stored.
  *
  * A matching rule either shows the confirm popup or launches the app the user picked for it.
+ * Going back from that app to where the rule fired is deliberate and does not fire it again.
  */
 class BourgetAccessibilityService : AccessibilityService() {
 
@@ -52,6 +53,8 @@ class BourgetAccessibilityService : AccessibilityService() {
     private var savedTemplate: String? = null
     private var scope: CoroutineScope? = null
     private var ignoredPackages: Set<String> = emptySet()
+    /** Home screen apps (also recents on most devices); passing through them is not using an app. */
+    private var homePackages: Set<String> = emptySet()
     private var currentApp: String? = null
     /**
      * Whether an address was read since switching to the current app. If not, a site that matches
@@ -59,6 +62,11 @@ class BourgetAccessibilityService : AccessibilityService() {
      * earlier page of the same site.
      */
     private var readAddressSinceSwitch = false
+    /**
+     * The user came back to this browser from the app a website rule launched. The site it stayed
+     * on must not launch that app again, so the first address read after the switch is exempt.
+     */
+    private var returnedToBrowser = false
     private var consented = false
 
     private val handler = Handler(Looper.getMainLooper())
@@ -116,6 +124,9 @@ class BourgetAccessibilityService : AccessibilityService() {
         val imePackages = getSystemService(InputMethodManager::class.java)
             .enabledInputMethodList.map { it.packageName }
         ignoredPackages = setOf(packageName, SYSTEM_UI_PACKAGE) + imePackages
+        val home = Intent(Intent.ACTION_MAIN).addCategory(Intent.CATEGORY_HOME)
+        homePackages = packageManager.queryIntentActivities(home, 0)
+            .map { it.activityInfo.packageName }.toSet()
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent) {
@@ -141,16 +152,19 @@ class BourgetAccessibilityService : AccessibilityService() {
         val appDetector = appDetector ?: return
         val now = SystemClock.elapsedRealtime()
         val switched = pkg != currentApp
+        // Coming back from the app a rule launched is deliberate: don't launch it again.
+        val returned = switched && launchGuard.onSwitched(pkg, pkg in homePackages)
         if (switched) {
             currentApp = pkg
             readAddressSinceSwitch = false
+            returnedToBrowser = returned && pkg in SUPPORTED_BROWSERS
             // Leaving or entering an app ends the current site visit, so coming back to the
             // browser on the same site counts as a new visit (subject to the cooldown).
             webDetector?.onForegroundChanged("app:$pkg", now)
         }
 
-        if (appDetector.onForegroundChanged(pkg, now, launchGuard.isExempt(pkg, now))) {
-            if (!launchInstead(appRules[pkg], now)) {
+        if (appDetector.onForegroundChanged(pkg, now, returned || launchGuard.isExempt(pkg, now))) {
+            if (!launchInstead(appRules[pkg], source = pkg, now)) {
                 showConfirm(
                     key = "app:$pkg",
                     title = applyTemplate(template(), appLabel(pkg)),
@@ -196,12 +210,14 @@ class BourgetAccessibilityService : AccessibilityService() {
         } ?: return
         val navigated = readAddressSinceSwitch
         readAddressSinceSwitch = true
+        val returned = returnedToBrowser
+        returnedToBrowser = false
 
         val rule = matchingRule(host, webDetector.targetPackages)
         val now = SystemClock.elapsedRealtime()
-        if (webDetector.onForegroundChanged(rule ?: "host:$host", now, launchGuard.isExempt(browser, now))) {
+        if (webDetector.onForegroundChanged(rule ?: "host:$host", now, returned || launchGuard.isExempt(browser, now))) {
             // The browser stays on the site; the user can come back to it.
-            if (launchInstead(rule?.let { websiteRules[it] }, now)) return
+            if (launchInstead(rule?.let { websiteRules[it] }, source = browser, now)) return
             showConfirm(
                 key = "web:${rule ?: host}",
                 title = applyTemplate(template(), rule ?: host),
@@ -229,12 +245,13 @@ class BourgetAccessibilityService : AccessibilityService() {
     /**
      * Opens the app [rule] launches instead of the popup. Returns false (show the popup) when the
      * rule shows the popup or its app is gone. The launched app is exempt from rules for a few
-     * seconds so rules that launch each other cannot loop.
+     * seconds so rules that launch each other cannot loop, and coming back from it to [source]
+     * (the app or browser the rule fired in) does not fire the rule again.
      */
-    private fun launchInstead(rule: Rule?, now: Long): Boolean {
+    private fun launchInstead(rule: Rule?, source: String, now: Long): Boolean {
         val target = rule?.launchPackage?.takeIf { rule.action == RuleAction.LAUNCH } ?: return false
         val intent = packageManager.getLaunchIntentForPackage(target) ?: return false
-        launchGuard.onLaunched(target, now)
+        launchGuard.onLaunched(target, source, now)
         return try {
             startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
             true
@@ -275,6 +292,8 @@ class BourgetAccessibilityService : AccessibilityService() {
         webDetector = null
         currentApp = null
         readAddressSinceSwitch = false
+        returnedToBrowser = false
+        launchGuard.clear()
         consented = false
         return super.onUnbind(intent)
     }
