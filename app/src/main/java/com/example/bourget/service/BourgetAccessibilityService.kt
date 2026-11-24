@@ -4,10 +4,12 @@ import android.accessibilityservice.AccessibilityService
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.database.ContentObserver
 import android.graphics.drawable.Drawable
 import android.os.Handler
 import android.os.Looper
 import android.os.SystemClock
+import android.provider.Settings
 import android.view.accessibility.AccessibilityEvent
 import android.view.inputmethod.InputMethodManager
 import com.example.bourget.R
@@ -63,6 +65,9 @@ class BourgetAccessibilityService : AccessibilityService() {
     private val urlCheck = Runnable { checkPending = false; checkBrowserUrl() }
     private var checkPending = false
     private var pendingSince = 0L
+    private val keyboardsObserver = object : ContentObserver(handler) {
+        override fun onChange(selfChange: Boolean) = updateIgnoredPackages()
+    }
 
     override fun onServiceConnected() {
         val appDetector = AppLaunchDetector(targetPackages = emptySet())
@@ -96,8 +101,18 @@ class BourgetAccessibilityService : AccessibilityService() {
                 }
             }
         }
-        // Windows that appear on top of an app without the user leaving it
-        // (our own overlay, system UI, keyboards) must not count as an app switch.
+        updateIgnoredPackages()
+        // A keyboard turned on later must not count as an app switch either.
+        contentResolver.registerContentObserver(
+            Settings.Secure.getUriFor(Settings.Secure.ENABLED_INPUT_METHODS), false, keyboardsObserver,
+        )
+    }
+
+    /**
+     * Windows that appear on top of an app without the user leaving it (our own overlay, system UI,
+     * keyboards) must not count as an app switch.
+     */
+    private fun updateIgnoredPackages() {
         val imePackages = getSystemService(InputMethodManager::class.java)
             .enabledInputMethodList.map { it.packageName }
         ignoredPackages = setOf(packageName, SYSTEM_UI_PACKAGE) + imePackages
@@ -250,6 +265,7 @@ class BourgetAccessibilityService : AccessibilityService() {
     }
 
     override fun onUnbind(intent: Intent?): Boolean {
+        contentResolver.unregisterContentObserver(keyboardsObserver)
         overlay.dismiss()
         handler.removeCallbacks(urlCheck)
         checkPending = false

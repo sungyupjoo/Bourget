@@ -9,11 +9,13 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import com.example.bourget.R
@@ -52,6 +54,14 @@ fun ConsentScreen(
 ) {
     var showPrivacy by rememberSaveable { mutableStateOf(false) }
     var showInfo by rememberSaveable { mutableStateOf(false) }
+    // Before Android 12, another app's overlay could cover this screen and pass taps through to
+    // "agree". Ignore touches while the window is obscured (Android 12+ blocks this itself).
+    val view = LocalView.current
+    DisposableEffect(view) {
+        val before = view.filterTouchesWhenObscured
+        view.filterTouchesWhenObscured = true
+        onDispose { view.filterTouchesWhenObscured = before }
+    }
     if (showPrivacy) {
         PrivacyPolicyScreen(onBack = { showPrivacy = false }, modifier = modifier)
         return
