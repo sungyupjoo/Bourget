@@ -90,6 +90,7 @@ class BourgetAccessibilityService : AccessibilityService() {
                     consented = it
                     if (!it) {
                         overlay.dismiss()
+                        overlay.hideNote()
                         handler.removeCallbacks(urlCheck)
                         checkPending = false
                     }
@@ -164,10 +165,11 @@ class BourgetAccessibilityService : AccessibilityService() {
         }
 
         if (appDetector.onForegroundChanged(pkg, now, returned || launchGuard.isExempt(pkg, now))) {
-            if (!launchInstead(appRules[pkg], source = pkg, now)) {
+            val label = appLabel(pkg)
+            if (!launchInstead(appRules[pkg], source = pkg, key = "app:$pkg", name = label, now)) {
                 showConfirm(
                     key = "app:$pkg",
-                    title = applyTemplate(template(), appLabel(pkg)),
+                    title = applyTemplate(template(), label),
                     icon = appIcon(pkg),
                     onGoBack = { performGlobalAction(GLOBAL_ACTION_HOME) },
                 )
@@ -217,7 +219,7 @@ class BourgetAccessibilityService : AccessibilityService() {
         val now = SystemClock.elapsedRealtime()
         if (webDetector.onForegroundChanged(rule ?: "host:$host", now, returned || launchGuard.isExempt(browser, now))) {
             // The browser stays on the site; the user can come back to it.
-            if (launchInstead(rule?.let { websiteRules[it] }, source = browser, now)) return
+            if (launchInstead(rule?.let { websiteRules[it] }, source = browser, key = "web:${rule ?: host}", name = rule ?: host, now)) return
             showConfirm(
                 key = "web:${rule ?: host}",
                 title = applyTemplate(template(), rule ?: host),
@@ -247,17 +249,20 @@ class BourgetAccessibilityService : AccessibilityService() {
      * rule shows the popup or its app is gone. The launched app is exempt from rules for a few
      * seconds so rules that launch each other cannot loop, and coming back from it to [source]
      * (the app or browser the rule fired in) does not fire the rule again.
+     * Like the popup, a short notice shows [name] and how many times [key] fired today.
      */
-    private fun launchInstead(rule: Rule?, source: String, now: Long): Boolean {
+    private fun launchInstead(rule: Rule?, source: String, key: String, name: String, now: Long): Boolean {
         val target = rule?.launchPackage?.takeIf { rule.action == RuleAction.LAUNCH } ?: return false
         val intent = packageManager.getLaunchIntentForPackage(target) ?: return false
         launchGuard.onLaunched(target, source, now)
-        return try {
+        try {
             startActivity(intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))
-            true
         } catch (e: ActivityNotFoundException) {
-            false
+            return false
         }
+        val (shown, _) = counts.onShown(key)
+        overlay.showNote(strings().getString(R.string.launch_count, name, shown))
+        return true
     }
 
     /** Resources in the language chosen in Bourget's settings, read when needed so a change applies at once. */
@@ -284,6 +289,7 @@ class BourgetAccessibilityService : AccessibilityService() {
     override fun onUnbind(intent: Intent?): Boolean {
         contentResolver.unregisterContentObserver(keyboardsObserver)
         overlay.dismiss()
+        overlay.hideNote()
         handler.removeCallbacks(urlCheck)
         checkPending = false
         scope?.cancel()

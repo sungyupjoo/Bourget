@@ -70,6 +70,74 @@ class ConfirmOverlay(private val service: AccessibilityService) {
         service.getSystemService(WindowManager::class.java).removeViewImmediate(current)
     }
 
+    private var noteView: View? = null
+
+    /**
+     * A short notice near the bottom of the screen that goes away by itself, shown when a rule
+     * opens another app instead of the popup. Drawn here rather than as a Toast: Android hides
+     * toasts from apps whose notifications are off, and Bourget asks for no notification
+     * permission. It takes no touches or focus, so the app underneath is used as usual.
+     */
+    fun showNote(text: String) {
+        hideNote()
+        val context: Context = AppLanguage.localized(service)
+        // The portrait logo and "Bourget" above the text, as in the app's header, so the notice
+        // is not mistaken for the opened app's own.
+        val note = LinearLayout(context).apply {
+            orientation = LinearLayout.HORIZONTAL
+            gravity = Gravity.CENTER_VERTICAL
+            setPadding(dp(16), dp(12), dp(24), dp(12))
+            background = GradientDrawable().apply {
+                cornerRadius = dp(28).toFloat()
+                setColor(SCRIM)
+            }
+            // Read out by screen readers, like a toast.
+            accessibilityLiveRegion = View.ACCESSIBILITY_LIVE_REGION_POLITE
+            addView(ImageView(context).apply {
+                setImageResource(R.drawable.ic_bourget)
+                setColorFilter(PAPER)
+                importantForAccessibility = View.IMPORTANT_FOR_ACCESSIBILITY_NO
+            }, LinearLayout.LayoutParams(dp(26), dp(32)))
+            addView(LinearLayout(context).apply {
+                orientation = LinearLayout.VERTICAL
+                setPadding(dp(12), 0, 0, 0)
+                addView(TextView(context).apply {
+                    setText(R.string.app_name)
+                    typeface = ResourcesCompat.getFont(context, R.font.line_seed_kr_bold)
+                    setTextColor(PAPER_VARIANT)
+                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 12f)
+                })
+                addView(TextView(context).apply {
+                    this.text = text
+                    typeface = ResourcesCompat.getFont(context, R.font.line_seed_kr_regular)
+                    setTextColor(PAPER)
+                    setTextSize(TypedValue.COMPLEX_UNIT_SP, 14f)
+                })
+            })
+        }
+        val params = WindowManager.LayoutParams(
+            WRAP_CONTENT,
+            WRAP_CONTENT,
+            WindowManager.LayoutParams.TYPE_ACCESSIBILITY_OVERLAY,
+            WindowManager.LayoutParams.FLAG_NOT_FOCUSABLE or WindowManager.LayoutParams.FLAG_NOT_TOUCHABLE,
+            PixelFormat.TRANSLUCENT,
+        ).apply {
+            gravity = Gravity.BOTTOM or Gravity.CENTER_HORIZONTAL
+            y = dp(96)
+        }
+        note.alpha = 0f
+        service.getSystemService(WindowManager::class.java).addView(note, params)
+        note.animate().alpha(1f).setDuration(FADE_IN_MILLIS).start()
+        note.postDelayed({ if (noteView === note) hideNote() }, NOTE_MILLIS)
+        noteView = note
+    }
+
+    fun hideNote() {
+        val current = noteView ?: return
+        noteView = null
+        service.getSystemService(WindowManager::class.java).removeViewImmediate(current)
+    }
+
     private fun build(title: String, icon: Drawable?, note: String?, onChoice: (goBack: Boolean) -> Unit): View {
         // The language chosen in Bourget's settings (see AppLanguage.localized).
         val context: Context = AppLanguage.localized(service)
@@ -176,5 +244,7 @@ class ConfirmOverlay(private val service: AccessibilityService) {
         /** The popup's secondary text color; also tints icons drawn on it, such as the link icon. */
         const val PAPER_VARIANT = 0xFFBDB7AE.toInt()
         private const val FADE_IN_MILLIS = 150L
+        /** About as long as a long toast, so the count can be read while the other app opens. */
+        private const val NOTE_MILLIS = 3_000L
     }
 }
